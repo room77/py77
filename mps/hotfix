@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+"""
+Main file to handle apply hotfixing. In the
+new push system, nearly all hotfixes should be paired with a package
+rules, so it is clear what new packages need to be updated
+"""
+
+__author__ = 'edelman@room77.com (Nicholas Edelman)'
+__copyright__ = 'Copyright 2013 Room77, Inc.'
+
+import getpass
+import os
+import subprocess
+import sys
+import time
+import yaml
+
+import r77_init # pylint: disable=W0611
+from pylib.prod.update_packages import UpdatePackages
+from pylib.base.exec_utils import ExecUtils
+from pylib.base.flags import Flags
+from pylib.base.term_color import TermColor
+from pylib.util.git_util import EmptyHotfixError, GitUtil
+
+class Error(Exception):
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return "'%s'" % self.value
+
+class Hotfix(object):
+  RELEASE_BRANCH_CMD = "git branch -r | grep release- | sed -e 's/^[ \t]*//'" + \
+      " | sed 's/\* //' | sed 's/origin\///' | sort -r | head -n"
+
+  def __init__(self, args):
+    self._user = args.user
+    self._rules = args.pkg_rules
+    self._git_hash = args.git_hash
+    if args.branch:
+      self._branch = args.branch
+      self._prev_branch = ''
+      if not args.release_name:
+        raise Error(TermColor.ColorStr(
+          'if specify --branch, MUST also specify the release to update',
+          'RED'))
+      self._release_name = args.release_name
+    else:
+      # find the latest and the second latest branch
+      self._branch = subprocess.check_output(
+          'eval %s1 | tail -1' % Hotfix.RELEASE_BRANCH_CMD,
+          shell=True).strip()
+      self._prev_branch = subprocess.check_output(
+          'eval %s2 | tail -1' % Hotfix.RELEASE_BRANCH_CMD,
+          shell=True).strip()
+      if len(self._branch) < 8 or not self._branch[-8:].isdigit():
+        raise Error(TermColor.ColorStr(
+          'branch %s does NOT have a date at the end' % self._branch,
+          'RED'))
+      self._release_name = self._branch[-8:]
+
+  def apply(self):
+    """apply the hotfix, update the package configs"""
+    # check if the hotfix should be applied to the current release branch
+    s = raw_input(
+      ('Do you want to apply the commit to the %s release branch %s? ' + \
+       '([y]/n)') % \
+      (TermColor.ColorStr('CURRENT', 'GREEN'),
+       TermColor.ColorStr(self._branch, 'GREEN')))
+    if not s.strip().lower() == 'n':
+      try:
+        GitUtil.apply_hotfix(self._branch, self._git_hash)
+      except EmptyHotfixError:
+        print 'hotfix is empty. continuing...'
+    if self._rules:
+      # if rules are specified, build the packages and commit the new
+      # releases file
+      up = UpdatePackages(self._release_name, self._rules)
+      up.build_update_release()
+
+if __name__ == '__main__':
+  # setup the parser
+  parser = Flags.PARSER
+  parser.add_argument('--branch', default='',
+                      help=('the name of the branch to apply the hotfix. '
+                            'defaults to the latest release branch. If '
+                            'specified, MUST specify the release_name'))
+  parser.add_argument('--release_name', default='',
+                      help=('if the --branch is specified, the corresponding '
+                            'release name to update'))
+  parser.add_argument('--user', default='r77',
+                      help='the user that must run this command')
+  parser.add_argument('--host', default='titan',
+                      help='the default host to run this command')
+  parser.add_argument('--no_packages', action='store_true',
+                      help=('set this flag if no packages need to be '
+                            'built as part of this hotfix. if not set, '
+                            'errors when no packages specified'))
+  parser.add_argument('--release_dir', default='/home/r77/src/release',
+                      help='the directory to hotfix the release')
+  parser.add_argument('git_hash',
+                      help='the git hash to hotfix')
+  parser.add_argument('pkg_rules', nargs='*',
+                      help='the space separated list of package rules to update')
+  Flags.InitArgs()
+  args = Flags.ARGS
+  if not args.no_packages and not args.pkg_rules:
+    raise Error(TermColor.ColorStr(
+      'You must specify a package rules or set of packages rules to build ' + \
+      'for a hotfix.',
+      'RED'))
+
+  user = getpass.getuser()
+  # if NOT in the release directory run the command again from the
+  # release directory. this ensures all the submodules are in the
+  # release directory.
+  if not user == args.user or \
+     not os.path.realpath(os.getcwd()) == os.path.realpath(args.release_dir):
+    print 'not on %s. running command again from this directory as user %s' % (
+      args.release_dir, args.user)
+    subprocess.check_call(
+      'ssh -t %s@%s "cd %s && %s"' % (
+      args.user, args.host, args.release_dir, ' '.join(sys.argv)),
+      shell=True)
+  else:
+    hotfix = Hotfix(args)
+    hotfix.apply()

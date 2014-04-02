@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+
+"""
+Creates all new release. Creates the branch, packages, and
+updates the appropriate configs
+"""
+
+__author__ = 'edelman@room77.com (Nicholas Edelman)'
+__copyright__ = 'Copyright 2013 Room77, Inc.'
+
+from datetime import date
+import getpass
+import os
+import subprocess
+import sys
+import yaml
+
+import r77_init # pylint: disable=W0611
+from pylib.prod.update_packages import UpdatePackages
+from pylib.prod.util.push_util import PushUtil
+from pylib.prod.util.queue_cluster_config_updates import QueueClusterConfigUpdates
+from pylib.base.flags import Flags
+from pylib.base.term_color import TermColor
+from pylib.util.git_util import GitUtil
+
+class Error(Exception):
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return repr(self.value)
+
+class MakeRelease(object):
+  # the clusters to create deployspecs with each release
+  CLUSTERS = ['staging', 'staging_apache', 'syslog_server',
+              'prod', 'prod_apache', 'prod_cms']
+
+  def __init__(self, date_str):
+    """
+    Args:
+      date_str - the date string in format 20130412, empty if not set and should
+        use today's date
+    """
+    self._user = Flags.ARGS.user
+    self._release_name = \
+      date.today().strftime('%Y%m%d') if not date_str else date_str
+    self._branch = 'release-%s' % self._release_name
+
+  def run(self):
+    self._make_release_branch()
+    self._update_deploy_specs()
+    up = UpdatePackages(self._release_name, [Flags.ARGS.pkg_rules_path])
+    up.build_update_release()
+    subprocess.check_call(
+      ('pramod -e "New release branch: %s. For any commit after %s '
+       'intended for the release, you must hotfix commits onto %s"') % (
+      self._branch, self._latest_commit[0:10], self._branch),
+      shell=True)
+    print TermColor.ColorStr('Done', 'GREEN')
+
+  def _make_release_branch(self):
+    """make the release branch"""
+    user = getpass.getuser()
+    if not user == self._user:
+      raise Error('the command should only be run as user %s' % self._user)
+    branch = self._branch
+    # get the latest master updates
+    subprocess.check_call('git remote update', shell=True)
+    subprocess.check_call('git checkout master', shell=True)
+    # does a git pull and updates the submodules
+    GitUtil.update_submodules()
+    # get the latest commit before the release is cut
+    self._latest_commit = GitUtil.get_latest_commit()
+    print 'Making release branch %s' % branch
+    # create the new release branch
+    GitUtil.create_branch(branch)
+    print TermColor.ColorStr('Created remote branch %s' % branch, 'GREEN')
+
+  def _update_deploy_specs(self):
+    """Update the deployspecs file with the latest release branch and
+    commit the file to both release AND master"""
+    for cluster in self.CLUSTERS:
+      deployspec_name = PushUtil.get_deployspec_name(cluster)
+      QueueClusterConfigUpdates.update_deployspec(
+        deployspec_name, cluster, self._release_name)
+
+if __name__ == '__main__':
+  Flags.PARSER.add_argument('--pkg_rules_path',
+                            default='prod/config/RULES',
+                            help='path to the make packager RULES')
+  Flags.PARSER.add_argument('--release_dir',
+                            default='/home/r77/src/release',
+                            help='directory to make release branches')
+  Flags.PARSER.add_argument('--user',
+                            default='r77',
+                            help='required user')
+  Flags.PARSER.add_argument('--host',
+                            default='titan',
+                            help='required host')
+  Flags.PARSER.add_argument('--date',
+                            default='',
+                            help='the date string to create the release branch, '
+                            'e.g. 20131012')
+  Flags.InitArgs()
+
+  # ensure this command is run from the release branch. this ensures
+  # that all the submodules pwd is the release directory
+  if not os.path.realpath(os.getcwd()) == os.path.realpath(Flags.ARGS.release_dir):
+    print 'not on %s. running command again from this directory' % (
+      Flags.ARGS.release_dir)
+
+    subprocess.check_call(
+      'ssh -t %s@%s "cd %s && %s"' % (
+      Flags.ARGS.user, Flags.ARGS.host, Flags.ARGS.release_dir, ' '.join(sys.argv)),
+      shell=True)
+  else:
+    mr = MakeRelease(Flags.ARGS.date)
+    mr.run()

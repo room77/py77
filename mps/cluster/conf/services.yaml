@@ -1,0 +1,28 @@
+apache:
+  port: 80
+  packages:
+    - client
+book_bin:
+  port: 20001
+  packages:
+    - book_bin
+general_files:
+  packages:
+    - prod_config
+    - scripts
+logrotate_apache:
+  packages:
+    - logrotate_apache
+rsyslog_client:
+  packages:
+    - logrotate_rsyslog
+    - rsyslog_client
+search_data:
+  packages:
+    - search_extras
+    - search_index
+    - search_static
+search_bin:
+  port: 20002
+  packages:
+    - search_bin

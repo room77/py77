@@ -1,0 +1,24 @@
+staging-release-20140320:
+  cluster: staging
+  release: '20140320'
+staging-release-20140328:
+  cluster: staging
+  release: '20140328'
+staging-release-20140328-override:
+  cluster: staging
+  release: '20140328'
+  override:
+  # hold back the client to last week
+  -
+    hosts:
+      - '@staging_apache'
+    release: '20140320'
+    services:
+      - apache
+  # hold back a package to a specific version
+  -
+    hosts:
+      - '@staging'
+    packages:
+      - book_bin
+    version: '1378106400_20140328'

@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+# export this parameter to 1 for verbose distcc debug output
+#export DISTCC_VERBOSE=1
+
+FLASH_BIN="`git rev-parse --show-toplevel`/pylib/flash/flash.py"
+
+if [[ ! -f ${FLASH_BIN} ]]; then
+  echo -e "Could not find: '${FLASH_BIN}'".
+  echo -e "\e[31;01mFailure.\e[0m"
+  exit 1
+else
+  ${FLASH_BIN} "$@"
+fi

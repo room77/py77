@@ -1,0 +1,89 @@
+# Note: Please make sure tabs are not expanded to spaces when modifying this file.
+
+SHELL = /bin/bash
+
+CC_VERSION = 4.9
+
+C = ccache gcc-$(CC_VERSION)
+CC = ccache g++-$(CC_VERSION)
+export CCACHE_DIR=/home/share/ccache/$(CC_VERSION)
+export CCACHE_BASEDIR=$(SRCROOT)
+export CCACHE_UMASK=002
+export CCACHE_TEMPDIR=/tmp
+export CCACHE_PREFIX=distcc
+export DISTCC_HOSTS="localhost/4 titan/16 $(shell cat /home/share/pxe/config/distcc-hosts | grep -v '\#' | grep . )"
+
+# Enable this to debug ccache.
+# export CCACHE_LOGFILE=/tmp/ccache.log
+
+# TODO: remove -Wno-vla once we move to gcc 4.9 and enable -std=c++1y
+WARNINGS = -fno-common -Werror -Wall -Wextra -Wformat=2 \
+  -Winit-self -Wpacked -Wp,-D_FORTIFY_SOURCE=2 -Wpointer-arith \
+  -Wredundant-decls -Wstrict-aliasing=0 \
+  -Wunreachable-code -Wwrite-strings -Wmissing-include-dirs \
+  -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers \
+  -Wno-parentheses -Wno-type-limits -Wno-unused-function -Wno-unused-result \
+  -Wno-vla \
+
+# Fixit(pramodg, edelman): Enable -Wsign-compare. Increase -Wstrict-aliasing level to 2. Enable -Wconversion
+
+DEFAULT_FLAGS = -g -O2 -pedantic -I$(SRCROOT) -I$(SRCROOT)/public -I$(PROTOBUFOUTDIR) -m64 $(WARNINGS)
+
+DEFAULT_CCFLAGS = $(DEFAULT_FLAGS) -std=c++1y -D_GLIBCXX_USE_NANOSLEEP
+# _GLIBCXX_USE_NANOSLEEP is needed for time/duration support in C++0x.
+
+DEFAULT_CFLAGS = $(DEFAULT_FLAGS)
+
+DEFAULT_LIBS = -lm -ldl -lpthread -B /home/share/scripts/ld.gold
+# "-B /home/share/scripts/ld.bfd",     # default linker
+# "-B /home/share/scripts/ld.gold",    # gold linker
+# "-L /home/share/lib/lib32",          # 32 bits cross compile libs.
+# "-L /home/share/lib/lib64",          # 64 bits cross compile libs.
+
+# Note: For faster build, we do not let makedepend search standard include
+#       directories.  Therefore, if a system-wide update causes some standard
+#       include files to change, everyone must do a "build clean" before
+#       proceeding.
+MAKEDEPEND_ARGS = -Y -- $(CFLAGS) --
+
+PYTHON_PATHS = "$(SRCROOT):/home/share/packages/python/pyinstaller_mods:$(PYTHONPATH)"
+PY = python
+
+# Protobuf rule.
+%.pb.cc: %.pb.h
+	@echo "Proto: $@"
+
+$(PROTOBUFOUTDIR)/%.pb.h: $(SRCROOT)/%.proto
+	@mkdir -p $(PROTOBUFOUTDIR)
+	$(PROTOBUFDIR)/bin/protoc --proto_path=$(SRCROOT) --cpp_out=$(PROTOBUFOUTDIR) --python_out=$(PROTOBUFOUTDIR) $<
+
+
+include $(AUTO_MAKEFILE_CC)
+include $(AUTO_MAKEFILE_JS)
+include $(AUTO_MAKEFILE_NG)
+include $(AUTO_MAKEFILE_NGE2E)
+include $(AUTO_MAKEFILE_PKG)
+include $(AUTO_MAKEFILE_PKG_BIN)
+include $(AUTO_MAKEFILE_PKG_SYS)
+include $(AUTO_MAKEFILE_PY)
+include $(AUTO_MAKEFILE_SWIG)
+
+clean:
+	@echo "deleting binary files..."
+	@rm -rf $(BINDIR)
+	@echo "deleting *~ files..."
+	@find . -name '*~' -delete
+	@echo "done."
+
+cleano:
+	@echo "deleting binary files..."
+	@rm -rf $(BINDIR)
+
+cleanall:
+	@echo "deleting binary files..."
+	@rm -rf $(BINDIR)
+	@echo "deleting *~ files..."
+	@find . -name '*~' -delete
+	@echo "clearing ccache..."
+	@ccache --clear -z
+	@echo "done."

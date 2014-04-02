@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+"""Control script for logrotate rsyslog"""
+
+__author__ = 'edelman@room77.com (Nicholas Edelman)'
+__copyright__ = 'Copyright 2013 Room77, Inc.'
+
+import argparse
+import os
+import subprocess
+
+from control_base import ControlBase
+
+class Error(Exception):
+  """Triggered when there is an error in the control script operation"""
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return "'%s'" % self.value
+
+class LogrotateController(ControlBase):
+  # dict from file name to destination
+  FILES = { 'rsyslog': '/etc/logrotate.d/rsyslog',
+            'apache2': '/etc/logrotate.d/apache2' }
+  # the path to the logrotate status file
+  STATUS_PATH = '/var/lib/logrotate/status'
+
+  def __init__(self):
+    super(LogrotateController, self).__init__()
+
+  def setlive(self):
+    """@override"""
+    current_data_dir = self._get_setlive_dir(__file__)
+    num_found = 0
+    for f, link in self.FILES.iteritems():
+      path = os.path.join(current_data_dir, f)
+      # need this check because only ONE file should be included
+      # with each logrotate package
+      if os.path.exists(path):
+        num_found += 1
+        # create the symlinks
+        self._create_link(path, link, sudo=True)
+    if not num_found:
+      raise Error('no files found to be added to logrotate!')
+
+  def status(self):
+    """@override
+    prints the logrotate status"""
+    if not os.path.exists(self.STATUS_PATH):
+      print ('logrotate is NOT outputing the status file. ' +
+             'there must be some issue')
+    else:
+      with open(self.STATUS_PATH, 'r') as f:
+        print f.read()
+
+if __name__ == '__main__':
+  c = LogrotateController()
+  c.run()

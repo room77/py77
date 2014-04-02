@@ -1,0 +1,19 @@
+# Copyright 2013 Room 77, Inc.
+
+# Generated Files
+
+# Libraries
+py_lib(name = "list_ops",
+			 src = ["list_ops.py"],
+			 dep = ["errors"])
+
+py_lib(name = "errors",
+			 src = ["errors.py"])
+
+# Binaries
+
+# Tests
+py_test(name = "list_ops_test",
+				main = ["list_ops_test.py"],
+				dep = ["list_ops"])
+

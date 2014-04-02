@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+ZEUS_BIN="`git rev-parse --show-toplevel`/pylib/zeus/zeus.py"
+
+if [[ ! -f ${ZEUS_BIN} ]]; then
+  echo -e "Could not find: '${ZEUS_BIN}'".
+  echo -e "\e[31;01mFailure.\e[0m"
+  exit 1
+else
+  ${ZEUS_BIN} "$@"
+fi

@@ -1,0 +1,32 @@
+# Data Packages - package a single directory or file
+
+# packages the latest cluster files into a package called cluster
+pkg(name="cluster",
+    data="prod/cluster")
+
+#
+# System Packages - package arbitrary sets of files or packages using
+#   custom packaging and control scripts
+#
+# For system packages, use the following syntax:
+# pkg_sys(name="foo",
+#         data="<data directory for foo>",
+#         control="<path to foo's control script>")
+# ***OR***
+# pkg_sys(name="foo",
+#         packager="<packaging script. This script is passed
+#                    the directory to dump the files>",
+#         control="<path to foo's control script>")
+#
+
+pkg_sys(name="logrotate_apache",
+        data="prod/example_pkgs/logrotate/apache2",
+        control="prod/example_pkgs/logrotate/control")
+
+pkg_sys(name="logrotate_rsyslog",
+        data="prod/example_pkgs/logrotate/rsyslog",
+        control="prod/example_pkgs/logrotate/control")
+
+pkg_sys(name="rsyslog_client",
+        packager="prod/example_pkgs/rsyslog_client/packager",
+        control="prod/example_pkgs/rsyslog_client/control")

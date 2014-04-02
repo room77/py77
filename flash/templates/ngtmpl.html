@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <!-- jasmine -->
+  <script src="/third_party/jasmine/lib/jasmine-core/jasmine.js"></script>
+  <script src="/third_party/jasmine/lib/jasmine-core/jasmine-html.js"></script>
+  <link href="/third_party/jasmine/lib/jasmine-core/jasmine.css" rel="stylesheet">
+  <!-- jquery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <!-- angular itself -->
+  <script src="/third_party/angular/build/angular.js"></script>
+  <!-- angular\'s testing helpers -->
+  <script src="/third_party/angular-mocks/angular-mocks.js"></script>
+  <!-- your angular app code follow by tests -->
+  ==ADD_JS_HERE==
+</head>
+<body class="r77ngtest">
+  <!-- bootstrap jasmine! -->
+  <script>
+     var jasmineEnv = jasmine.getEnv();
+     // Tell it to add an Html Reporter
+     // this will add detailed HTML-formatted results
+     // for each spec ran.
+     jasmineEnv.addReporter(new jasmine.HtmlReporter());
+     // Execute the tests!
+     jasmineEnv.execute();
+  </script>
+</body>
+</html>

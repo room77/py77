@@ -1,0 +1,176 @@
+#!/usr/bin/python
+
+"""Main file to handle deployment and activation
+The main api provides simple deployment commands:
+  prod/push deploy $cluster
+  prod/push activate $cluster
+  prod/push restart $cluster $package1 ... $packageN
+--deploy-spec is an optional parameter. In the typical
+case, the deploy-spec is inferred as $cluster-$branchname
+"""
+
+__author__ = 'edelman@room77.com (Nicholas Edelman)'
+__copyright__ = 'Copyright 2013 Room77, Inc.'
+
+import argparse
+import os
+import subprocess
+import sys
+
+import r77_init # pylint: disable=W0611
+from pylib.prod.util.push_util import PushUtil
+from pylib.base.flags import Flags
+from pylib.base.term_color import TermColor
+
+class Push(object):
+
+  def __init__(self, args):
+    self._deploy_spec = args.deploy_spec
+    # if the deploy_spec is not set uses the $cluster-$current_branchname
+    if not self._deploy_spec:
+      self._deploy_spec = PushUtil.get_deployspec_name(args.cluster)
+    self._optional_args = self._get_optional_args(args)
+    # host and user to push from
+    self._push_host = args.push_host
+    self._push_user = args.push_user
+
+  def activate(self):
+    """Activate the packages for the specified deploy_spec OR the
+    $cluster-$current_branchname deploy_spec if the deploy_spec parameter
+    is not set
+    """
+    self._run_command(['activate'], self._push_host)
+
+  def deploy(self):
+    """Deploys the specified deploy_spec OR the $cluster-$current_branchname
+    deploy_spec if the deploy_spec parameter is not set
+    """
+    self._run_command(['populate_repo', '--host', self._push_host])
+    self._run_command(['deploy'], self._push_host)
+
+  def clean_repo(self, hostgroup):
+    """Cleans packages from the repo"""
+    self._run_command(['clean_repo', '--hostgroup', hostgroup])
+
+  def restart(self, packages):
+    """Restarts the packages in the specified deploy_spec OR if not set the
+    $cluster-$current_branchname
+    Args:
+      packages - the list of packages to restart
+    """
+    self._run_command(['restart', ' '.join(packages)],
+                      self._push_host)
+
+  def _get_cluster_path(self, remote=False):
+    """Gets the path of the cluster file
+    Args:
+      remote - true if the call is to a remote machine. false otherwise
+    Returns:
+      The path of the cluster file
+    """
+    if remote:
+      return '/home/share/repo/cluster/current/cluster/cluster.py'
+    else:
+      return os.path.abspath(
+          os.path.join(os.path.dirname(__file__), 'cluster/cluster.py'))
+
+  def _get_optional_args(self, args):
+    """Parses the args to get the optional arguments
+    Args:
+      args - the argparse result
+    """
+    optional = []
+    if args.dry_run:
+      optional.append('--dry-run')
+    if not args.quiet:
+      optional.append('--verbose')
+    return optional
+
+  def _run_command(self, action_cmds, host=''):
+    """Runs the command with appropriate arguments
+    Args:
+      action_cmds (list) - the command to run with any parameters
+      host (string) - optional host to run the command. if NOT specified,
+         runs the command locally
+    """
+    cmd = []
+    remote = len(host) > 0
+    cmd.extend([self._get_cluster_path(remote),
+                '--deploy-spec', self._deploy_spec])
+    cmd.extend(self._optional_args)
+    cmd.extend(action_cmds)
+    if remote:
+      # new -t for TTY printing to suppress output buffering
+      cmd = ['ssh', '-t', '-i', '/home/share/aws/r77_aws_keypair',
+             '%s@%s' % (self._push_user, self._push_host),
+             '%s' % ' '.join(cmd)]
+    print ' '.join(cmd)
+    subprocess.check_call(cmd)
+
+
+if __name__ == '__main__':
+  # setup the parser
+  parser = Flags.PARSER
+  parser.add_argument('--deploy-spec', default='',
+                      help='the deploy spec to use. otherwise, defaults '+
+                      'to the current branch name')
+  parser.add_argument('--push-host', default='push.prod.room77.com',
+                      help='hostname to do the pushing from')
+  parser.add_argument('--push-user', default='walle',
+                      help='user of the push-host')
+  parser.add_argument('--dry-run', action='store_true',
+                      help='set to print a dry run')
+  parser.add_argument('--force', action='store_true',
+                      help=('set this if you do not wanted to be prompted when'
+                            'pushing to prod'))
+  parser.add_argument('--quiet', action='store_true',
+                      help='set to suppress verbose messaging')
+  # subparsers for {deploy,activate}
+  subparsers = parser.add_subparsers(help='sub-command help')
+  # activate
+  p = subparsers.add_parser('activate')
+  p.set_defaults(cmd='activate')
+  p.add_argument('cluster',
+                 help='name of cluster to push to. ignored if deploy-spec set')
+  # deploy
+  p = subparsers.add_parser('deploy')
+  p.set_defaults(cmd='deploy')
+  p.add_argument('cluster',
+                 help='name of cluster to push to. ignored if deploy-spec set')
+  p = subparsers.add_parser('clean_repo')
+  # clean_repo
+  p.set_defaults(cmd='clean_repo')
+  p.add_argument('cluster',
+                 help='name of cluster to push to. ignored if deploy-spec set')
+  p.add_argument('--hostgroup', required=True,
+                 help='name of the hostgroup to clean')
+  # restart
+  p = subparsers.add_parser('restart')
+  p.set_defaults(cmd='restart')
+  p.add_argument('cluster',
+                 help='name of cluster to push to. ignored if deploy-spec set')
+  p.add_argument('packages', nargs='*',
+                 help=('the space separated list of package names to restart. ' +
+                       'unlike other commands, just the names: ' +
+                       'book_bin instead of prod/config/book_bin'))
+  # parse the args
+  Flags.InitArgs()
+  args = Flags.ARGS
+  if not args.force and 'prod' in args.cluster:
+    if args.cluster == 'prod':
+      color_cluster = TermColor.ColorStr(args.cluster, 'RED')
+      s = raw_input(('Pushing to prod cluster is DANGEROUS. You have elected ' +
+                     'to push to the prod_cluster %s. ' +
+                     'Are you sure you want to push to the prod cluster %s? ' +
+                     '(Y/[N])') % (color_cluster, color_cluster))
+      if not s.strip().lower() == 'y':
+        sys.exit(0)
+
+  # run the commands
+  push = Push(args)
+  if args.cmd == 'restart':
+    getattr(push, args.cmd)(args.packages)
+  elif args.cmd == 'clean_repo':
+    getattr(push, args.cmd)(args.hostgroup)
+  else:
+    getattr(push, args.cmd)()

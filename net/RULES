@@ -1,0 +1,20 @@
+# Copyright 2012 Room77 Inc. All Rights Reserved.
+#
+
+# Generated Files
+
+# Libraries
+py_lib(name = "server",
+       src  = [ "server.py" ],
+       dep  = [ "/pylib/base/flags"])
+
+py_lib(name = "util",
+       src  = [ "util.py" ],
+       dep  = [ "/pylib/base/flags"])
+
+# Binaries
+
+# Tests
+py_test(name = "util_test",
+        main = [ "util_test.py" ],
+        dep  = [ "util"])

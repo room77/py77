@@ -1,0 +1,430 @@
+"""File Utils."""
+
+__author__ = 'pramodg@room77.com (Pramod Gupta)'
+__copyright__ = 'Copyright 2012 Room77, Inc.'
+
+from contextlib import contextmanager
+from datetime import datetime
+import distutils.dir_util as ddu
+import os
+import re
+import stat
+import sys
+
+import r77_init  # pylint: disable=W0611
+from pylib.base.term_color import TermColor
+
+
+class FileUtils:
+  """File Utility class."""
+
+  @classmethod
+  @contextmanager
+  def PushDir(cls, dir):
+    """Used to temporarily change directory to execute a certain file command.
+
+    Args:
+      dir: string: The directory to switch to temporarily.
+
+    Usage:
+      print os.getcwd() # "path/to/old"
+      with FileUtils.PushDir('path/to/new'):
+        print os.getcwd() # "path/to/new"
+      print os.getcwd() # "path/to/old"
+    """
+    previous_dir = os.getcwd()
+    os.chdir(dir)
+    yield
+    os.chdir(previous_dir)
+
+  @classmethod
+  def MakeDirs(cls, dir):
+    """Creates a dir and all intermediate dirs if necessary.
+
+    Args:
+      dir: string: The directory to build.
+    """
+    if not os.path.exists(dir): os.makedirs(dir)
+
+  @classmethod
+  def CopyDirTree(cls, src, dst):
+    """Copies the entire directory tree.
+
+    Args:
+      dir: string: The directory to build.
+
+    Return:
+      boolean: Returns True on success and False otherwise.
+    """
+    try:
+      ddu.copy_tree(src, dst)
+      return True
+    except (DistutilsFileError, OSError) as e:
+      TermColor.Error('Cannot copy %s to %s. %s: %s' % (src, dst, type(e), e))
+    return False
+
+  @classmethod
+  def CreateLink(cls, linkdir, dir):
+    """Creates a link to the build or template directories if it does
+    not already exist OR if it is invalid. AND creates the directory
+
+    Args:
+      linkdir: string: the location to create the link
+      dir: string: the location where the buildfiles or template are stored
+    """
+    cls.MakeDirs(dir)
+    if not os.path.exists(linkdir) or os.path.realpath(linkdir) != os.path.abspath(dir):
+      if os.path.lexists(linkdir): os.remove(linkdir)
+      os.symlink(dir, linkdir)
+
+  @classmethod
+  def GetSrcRoot(cls):
+    """Returns the src root."""
+    # R77_SRC_ROOT is set by flash when building
+    try:
+      return os.environ['R77_SRC_ROOT']
+    except KeyError:
+      pass
+    dir = os.getcwd()
+    while (dir and dir != '/' and os.path.isdir(dir) and not
+           os.path.exists(os.path.join(dir, '.git'))):
+      dir = os.path.dirname(dir)
+    return dir
+
+  @classmethod
+  def GetGenDir(cls):
+    return os.path.join(cls.GetSrcRoot(), 'gen')
+
+  @classmethod
+  def GetOutRoot(cls):
+    """Returns the Bin dir where all the build output is generated."""
+    return '/localdisk'
+
+  @classmethod
+  def GetOutDir(cls, subpath):
+    """Returns the output dir for the subpath."""
+    src_dir = cls.GetSrcRoot()
+    # If the src is not already on localdisk, create the output on localdisk.
+    if src_dir.find(cls.GetOutRoot()) != 0: src_dir = cls.GetOutRoot() + src_dir
+    return os.path.join(src_dir, subpath)
+
+  @classmethod
+  def GetBinDir(cls):
+    """Returns the Bin dir where all the build output is generated."""
+    return cls.GetOutDir('e')
+
+  @classmethod
+  def GetEDir(cls):
+    """Returns the 'e' dir which is a soft link to the bin dir.
+    Note: This is only there as a user friendly directory and none of the flash
+    code should depend on it.
+    """
+    return os.path.join(cls.GetSrcRoot(), 'e')
+
+  @classmethod
+  def GetPipelineDir(cls):
+    """Returns the pipeline dir where all the pipeline output is generated."""
+    return cls.GetOutDir(os.path.join('pipeline', 'out'))
+
+  @classmethod
+  def GetPipelineLinkDir(cls):
+    """Returns the 'pipeline' dir which is a soft link to the pipeline dir.
+    Note: This is only there as a user friendly directory and none of the code should depend on it.
+    """
+    return os.path.join(cls.GetSrcRoot(), 'pipeline', 'out')
+
+  @classmethod
+  def FromAbsoluteToRepoRootPath(cls, abspath):
+    """Converts an absolute path to a path relative to the repo root.
+    For instance, /home/r77/src/walle/foo/bar/baz is converted to
+    foo/bar/baz
+    """
+    return os.path.relpath(abspath, cls.GetSrcRoot())
+
+  @classmethod
+  def GetWebTestHtmlDir(cls):
+    """Returns the Bin dir where all the build output is generated."""
+    return os.path.join(cls.GetBinDir(), 'html%s' % cls.GetWebTestHtmlUrlPath())
+
+  @classmethod
+  def GetWebTestHtmlLink(cls):
+    """
+    Returns the dir which is a soft link to the web test html directory.
+    """
+    return os.path.join(cls.GetSrcRoot(), 'html%s' % cls.GetWebTestHtmlUrlPath())
+
+  @classmethod
+  def GetWebTestHtmlUrlPath(cls):
+    """
+    Returns the web test path to access these files from a browser url
+    """
+    return '/ngtest'
+
+  @classmethod
+  def GetBinPathForFile(cls, filename):
+    """Returns the bin path for the file. The bin path is generated by
+    replacing the src root with the bin dir.
+
+    Args:
+      filename: string: The file for which the bin path is needed.
+    Return:
+      string: The bin path for the file.
+    """
+    if not filename: return None
+    return filename.replace(cls.GetSrcRoot(), cls.GetBinDir(), 1)
+
+  @classmethod
+  def GetAbsPathForFile(cls, filename):
+    """Returns the absolute path for the filename.
+    Args:
+      filename: string: The file for which the abs path is needed.
+    Return:
+      string: The abs path for the file if it exists.
+    """
+    if not filename: return None
+
+    if os.path.exists(filename):
+      return os.path.normpath(os.path.abspath(filename))
+
+    if filename[0] == '/':
+      filename = filename[1:]
+    abs_path = os.path.normpath(os.path.join(cls.GetSrcRoot(), filename))
+    if os.path.exists(abs_path):
+      return abs_path
+
+    return None
+
+  @classmethod
+  def CreateFileWithData(cls, filename, data='\n'):
+    """Resets a file with the input data.
+    Args:
+      filename: string: The name of the file to reset.
+      data: string: The default data to write to the file.
+    """
+    f = open(filename, 'w')
+    f.write(data)
+    f.close()
+
+  @classmethod
+  def UnixBasename(cls, path):
+    """In unix, /foo/bar/ basename returns bar, but in
+    python os.path.basename returns an empty string.
+    change the behavior to act like unix
+    """
+    # remove the trailing slash
+    if path[-1:] == "/":
+      path = path[0:-1]
+    return os.path.basename(path)
+
+  @classmethod
+  def GetSubDirsInDir(cls, dir, recurse=True, ignore_list=[]):
+    """Given a directory, returns all the subdirectories.
+
+    Args:
+      dir: string: The directory to walk.
+      recurse: boolean: If we should recurse the directory tree.
+      ignore_list: list: List of strings to ignore.
+
+    Return:
+      list: List of subdirs.
+    """
+    out_dirs = []
+    if not os.path.isdir(dir):
+      TermColor.Warning('Not a directory: %s' % dir)
+      return out_dirs
+
+    for (root, subdirs, files) in os.walk(dir):
+      ignore = cls.IgnorePath(root, ignore_list)
+      if ignore:
+        TermColor.Info('Ignored dirs in %s as anything with [%s] is ignored' % (root, ignore))
+        continue
+      out_dirs += [os.path.join(root, x) for x in subdirs]
+      # Check if we should continue the walk.
+      if not recurse: break
+
+    return out_dirs
+
+  @classmethod
+  def GetFilesInDir(cls, dir, recurse=True, ignore_list=[]):
+    """Given a directory, returns all the files in it and sub directories.
+
+    Args:
+      dir: string: The directory to walk.
+      recurse: boolean: If we should recurse the directory tree.
+      ignore_list: list: List of strings to ignore.
+
+    Return:
+      list: List of files.
+    """
+    out_files = []
+    if not os.path.isdir(dir):
+      TermColor.Warning('Not a directory: %s' % dir)
+      return out_files
+
+    for (root, subdirs, files) in os.walk(dir):
+      ignore = cls.IgnorePath(root, ignore_list)
+      if ignore:
+        TermColor.Info('Ignored dirs in %s as anything with [%s] is ignored' % (root, ignore))
+        continue
+      out_files += [os.path.join(root, x) for x in files]
+      # Check if we should continue the walk.
+      if not recurse: break
+
+    return out_files
+
+  @classmethod
+  def IgnorePath(cls, path, ignore_list):
+    """Check if a given path can be ignored.
+    Args:
+      path: string: The path to check.
+      ignore_list: list: List of strings to ignore.
+
+    Return:
+      string: Returns the string because of which the task is ignored and None
+          otherwise.
+    """
+    return next((x for x in ignore_list if path.find(x) != -1), None)
+
+  @classmethod
+  def GetAllItemsSortedByDate(cls, dir, pattern='.*', filter=stat.S_ISREG):
+    """Returns all the files in a directory  sorted by date.
+
+    Args:
+      path: string: The path to check.
+      pattern: string: The the pattern the item name must match.
+      filter: bool method(stat mode): Filter that returns true or false for a stat mode.
+          Only modes for which the filter returns true are kept.
+
+    Return:
+      list:  List of files sorted by creation date.
+
+    """
+    # get all entries in the directory w/ stats
+    entries = (os.path.join(dir, x) for x in os.listdir(dir) if re.match(pattern, x))
+    entries = ((os.stat(path), path) for path in entries)
+
+    # leave only filtered files, insert creation date
+    entries = ((s[stat.ST_CTIME], path)
+               for s, path in entries if filter(s[stat.ST_MODE]))
+
+    return [path for (cdate, path) in sorted(entries, reverse=True)]
+
+  @classmethod
+  def GetAllFilesSortedByDate(cls, dir, pattern='.*'):
+    """Returns all the files in a directory  sorted by date.
+
+    Args:
+      path: string: The path to check.
+      pattern: string: The the pattern the file name must match.
+      ignore_list: list: List of strings to ignore.
+
+    Return:
+      string: Returns the string because of which the task is ignored and None
+          otherwise.
+    """
+    return cls.GetAllItemsSortedByDate(dir, pattern, filter=stat.S_ISREG)
+
+  @classmethod
+  def GetAllDirsSortedByDate(cls, dir, pattern='.*'):
+    """Returns all the files in a directory  sorted by date.
+
+    Args:
+      path: string: The path to check.
+      pattern: string: The the pattern the subdir name must match.
+      ignore_list: list: List of strings to ignore.
+
+    Return:
+      string: Returns the string because of which the task is ignored and None
+          otherwise.
+    """
+    return cls.GetAllItemsSortedByDate(dir, pattern, filter=stat.S_ISDIR)
+
+  @classmethod
+  def GetLatestFile(cls, dir):
+    """Returns the latest file in a folder.
+
+    Args:
+      dir: string: The dir.
+
+    Return:
+      string: The latest file if one exists and None otherwise.
+    """
+    res = cls.GetAllFilesSortedByDate(dir)
+    if not res: return None
+    return res[0]
+
+  @classmethod
+  def GetLatestDir(cls, dir):
+    """Returns the latest directory in a folder.
+
+    Args:
+      dir: string: The dir.
+
+    Return:
+      string: The latest subdir if one exists and None otherwise.
+    """
+    res = cls.GetAllDirsSortedByDate(dir)
+    if not res: return None
+    return res[0]
+
+  @classmethod
+  def GetPreviousDir(cls, path, pattern='.*'):
+    """Given a path, returns the sibling directory that was created before it.
+
+    Args:
+      path: string: The path for the directory.
+      pattern: string: The the pattern the sibling dirnames must match.
+
+    Return:
+      string: Returns the previous dir if one exists and None otherwise.
+    """
+    (parent, dir_name) = os.path.split(path)
+    take_next = 0
+    for dir in cls.GetAllDirsSortedByDate(parent, pattern):
+      if take_next == 1:
+        return dir
+      if os.path.basename(dir) == dir_name:
+        take_next = 1
+    return None
+
+  @classmethod
+  def GetPreviousDatedDir(cls, path):
+    """Given a path, returns the sibling directory that was created with a date before it.
+
+    Args:
+      path: string: The path.
+
+    Return:
+      string: Returns the previous dir if one exists and None otherwise.
+    """
+    # Use the pattern to match names containing only 8 digits, e.g. 20140107
+    return cls.GetPreviousDir(path, '^\d{8}$')
+
+  @classmethod
+  def RemoveFiles(cls, files):
+    """List of files to remove.
+
+    Args:
+      files: list[string]: A list of files to remove.
+    """
+    for i in files:
+      try:
+          os.remove(i)
+      except OSError:
+          pass
+
+  @classmethod
+  def FileContents(cls, file):
+    """Reads the contents of a file if present.
+
+    Args:
+      file: string: The file to read.
+
+    Returns:
+      string: The contents of the file. None if the file is not present.
+    """
+    if not os.path.isfile(file): return None
+    res = None
+    with open(file, 'r') as fp:
+      res = fp.read()
+    return res

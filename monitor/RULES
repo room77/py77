@@ -1,0 +1,2 @@
+py_bin(name = "monitor_server",
+       src  = ["monitor_server.py"])

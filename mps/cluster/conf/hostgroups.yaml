@@ -1,0 +1,15 @@
+#
+# The staging cluster
+#
+staging:
+  - '@staging_apache'
+  - '@staging_backend'
+staging_apache:
+  - staging-apache01.prod.room77.com
+  - staging-apache02.prod.room77.com
+staging_backend:
+  - '@staging_book'
+  - '@staging_search'
+staging_book:
+  - staging-book01.prod.room77.com
+  - staging-book02.prod.room77.com

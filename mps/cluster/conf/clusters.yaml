@@ -1,0 +1,23 @@
+staging:
+  user: foouser
+  data:
+    -
+      hosts: [ '@staging' ]
+      services: [ general_files, rsyslog_client ]
+    -
+      hosts: [ '@staging_apache' ]
+      services:
+        - apache
+        - logrotate_apache
+    -
+      hosts: [ '@staging_backend' ]
+      services:
+        - search_data
+    -
+      hosts: [ '@staging_book' ]
+      services:
+        - book_bin
+    -
+      hosts: [ '@staging_search' ]
+      services:
+        - search_bin

@@ -1,0 +1,20 @@
+All the available packages are specified in the prod/config/RULES file.
+These packages are built using the flash utility. e.g:
+   flash run cluster
+This builds the cluster package.
+
+To prepare the packages to be built, please modify the three flags in the file
+prod/packager/packager.py:
+  --pkg_host - the host to store the packages
+  --pkg_repo - the directory to store the packages. this directory MUST
+      have a subdirectory tmp
+  --pkg_user - the user to ssh to store the packages
+
+Then modify the three flags in prod/util/queue_cluster_config_updates.py:
+  --queue_config_host - the host to run the prod/cluster/conf/*.yaml modifications
+  --queue_config_repo - location of a git directory for this script to automatically
+      modify the prod/cluster/conf/*.yaml files
+  --queue_config_user - the user to ssh to run the automatic yaml modifications
+
+Then modify the --user, --host, and --release_dir in the prod/hotfix AND in
+the prod/make_release files.

@@ -1,0 +1,12 @@
+# Copyright 2013 Room 77, Inc.
+
+# Libraries
+py_lib(name = "decorations",
+       src  = [ "decorations.py" ])
+
+# Binaries
+
+# Tests
+py_test(name = "decorations_test",
+        main = ["decorations_test.py"],
+        dep  = ["decorations"])

@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+"""Control script for rsyslog client"""
+
+__author__ = 'edelman@room77.com (Nicholas Edelman)'
+__copyright__ = 'Copyright 2013 Room77, Inc.'
+
+import argparse
+import os
+import subprocess
+
+from control_base import ControlBase
+
+class Error(Exception):
+  """Triggered when there is an error in the control script operation"""
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return "'%s'" % self.value
+
+class RsyslogClientController(ControlBase):
+  # dict from file name to destination
+  FILES = { '50-default.conf': '/etc/rsyslog.d/50-default.conf',
+            'rsyslog.conf': '/etc/rsyslog.conf' }
+
+  def __init__(self):
+    """
+    Raises:
+      Error - missing finds in the config file
+    """
+    super(RsyslogClientController, self).__init__()
+    if not 'subdir' in self._config:
+      raise Error('subdir MUST be specified in the yaml file')
+
+  def setlive(self):
+    """@override"""
+    if not os.path.exists('/etc/rsyslog.d'):
+      subprocess.check_call('sudo aptitude install -y rsyslog', shell=True)
+    current_data_dir = os.path.join(self._get_setlive_dir(__file__),
+                                    self._config['subdir'])
+    for f, link in self.FILES.iteritems():
+      # create the symlinks
+      self._create_link(
+        os.path.join(current_data_dir, f), link, sudo=True)
+
+  def start(self):
+    """@override
+    Simply restarts the rsyslog service"""
+    subprocess.check_call("sudo service rsyslog restart", shell=True)
+
+  def status(self):
+    """@override
+    prints the rsyslog client process status"""
+    try:
+      print subprocess.check_output('sudo service rsyslog status', shell=True)
+    except subprocess.CalledProcessError as e:
+      print e.output
+
+if __name__ == '__main__':
+  c = RsyslogClientController()
+  c.run()

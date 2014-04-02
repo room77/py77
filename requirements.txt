@@ -1,0 +1,20 @@
+BeautifulSoup
+Fabric
+flask
+flask-mysql
+gunicorn
+mysql-python
+-r mail/premailer/requirements.txt
+python-Levenshtein
+pyyaml
+requests
+sendgrid==0.1.4
+sqlalchemy
+ujson # requires python-dev
+user_agents
+--allow-external python-graph-core
+--allow-unverified python-graph-core
+python-graph-core
+--allow-external python-graph-dot
+--allow-unverified python-graph-dot
+python-graph-dot

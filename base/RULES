@@ -1,0 +1,17 @@
+# Copyright 2012 Room77 Inc. All Rights Reserved.
+#
+
+# Generated Files
+
+# Libraries
+py_lib(name = "exec_utils",
+       src  = [ "exec_utils.py" ],
+       dep  = [])
+
+py_lib(name = "flags",
+       src  = [ "flags.py" ],
+       dep  = [])
+
+py_lib(name = "term_color",
+       src  = [ "term_color.py" ],
+       dep  = [])

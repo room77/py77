@@ -1,0 +1,33 @@
+# Copyright 2013 Room 77, Inc.
+
+# Libraries
+
+py_lib(name = "algorithm",
+       src = ["algorithm.py"])
+
+py_lib(name = "date_time",
+       src = ["date_time.py"])
+
+py_lib(name = "singleton",
+       src = ["singleton.py"])
+
+py_lib(name = "time_decay",
+       src = ["time_decay.py"])
+
+# Binaries
+
+# Tests
+py_test(name = "algorithm_test",
+        main = ["algorithm.py"])
+
+py_test(name = "date_time_test",
+        main = ["date_time_test.py"],
+        dep = ["date_time"])
+
+py_test(name = "singleton_test",
+        main = ["singleton_test.py"],
+        dep  = ["singleton"])
+
+py_test(name = "time_decay_test",
+        main = ["time_decay_test.py"],
+        dep  = ["time_decay"])

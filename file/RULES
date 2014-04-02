@@ -1,0 +1,8 @@
+
+py_lib(name = "file_utils",
+       src  = [ "file_utils.py" ],
+       dep  = [])
+
+py_lib(name = "parse_include_list",
+       src  = [ "parse_include_list.py" ],
+       dep  = [])

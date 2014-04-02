@@ -1,0 +1,454 @@
+======= Master Packaging System (MPS) =======
+Master Packaging System (MPS) has been designed to with two major goals in mind:
+(1) support simple deployments using yaml config files
+(2) easily support multi-cluster deployments
+
+The Master Packaging System (MPS) solves the limitations of Room 77's
+previous deployment system by creating a generic interface for
+packages and for deployment. Every deployment is represented by a set
+of packages.  A package is the core building block, and a package is
+the only thing that should ever be deployed to production. A package
+can be almost anything: data, binary, system binary, etc. A set of
+config files define the deployment. The config files document hosts,
+releases, services (collections of packages), clusters that need to be
+deployed. The configuration files explicitly define the current
+cluster state. This explicit definition makes it easy to check the
+current cluster state and to revert to older versions. In the rest of
+this section, the packaging system and the building blocks are
+discussed in more detail.
+
+==== Packages ====
+
+The fundamental building block is a package. A package may have data,
+but each package must have a control script. A package has four
+primitive operations:
+          setlive - prepares the package to be started. Examples of setlive
+                  operations include adjusting symlinks and installing packages.
+          start - executes the set of commands to start the package. This
+                often means starting an executable and waiting for the
+                startup to complete successfully.
+          stop - stops the package. Examples of stop operations include kill
+               a process, wait for shutdown, and cleaning up old files.
+          status - prints status information about the package
+
+A package is generic. A package may include something as simple as a
+file or directory, or more complex entities such as binaries or system
+packages. Each package defines an executable implementing the four
+primitives: setlive, start, stop, and status. This allows each type of
+package to have custom behavior for these commands.
+
+== Defining a package ==
+
+Packages are built using flash. Similar to flash, each package
+is defined in a RULES file. At this time, all packages are defined in
+prod/config/RULES, but in the future, this file will grow and be
+broken into logical subdirectories. The packager defines three rule
+types which thus far have been able to handle all our use cases:
+      pkg(name=”foo”, data=”/home/share/foo”) - this is the simplest but at
+          the same time the most common package. This directive creates a
+          package from a file or directory, and automatically packages a control
+          script with this package. During the setlive command, a symlink is
+          created from the the package location to the file or directory that
+          was packaged. e.g. in the example a symlink would be created at
+          /home/share/foo.
+      pkg_bin(name=”meta_bin”, rule=”meta/meta_search/meta_search_server”,
+          ctrl=”prod/packager/bin/meta.yaml”) - pkg_bin is a specific packaging
+          directive for binaries that are built by flash. Like the pkg
+          directive, pkg_bin automatically creates a control script for the
+          package. “rule” specifies the flash rule to build. “ctrl” specifies
+          the set of shell command to run before and after the binary (may be
+          none), the set of command line arguments, and the server port.
+      pkg_sys is a more complex directive that allows a user to specify more
+          arbitrary packages. The format is as follows:
+          name - the package name
+          One of data or packager:
+              data - the directory or file to import
+              packager - a script to copy the package into a certain directory.
+                  For instance, you might want to a minify a javascript file before
+                  packaging.
+          control - the control script. optional if a file called “control” is
+              specified in the data directory
+
+== Release ==
+
+The release configuration, prod/cluster/conf/releases.yaml, specifies
+the set of packages associated with a release. Each week, all the new
+packages are built and the versions of each packages are stored in the
+releases file. For instance, suppose we have two packages foo and
+bar. The releases file might look like this:
+
+‘20131029’:
+  foo: 1383065448_97fe55_foo
+  bar: 1383065448_97fe55_bar
+‘20131106’:
+  foo: 1383599382_923ae5_foo
+  bar: 1383599382_923ae5_foo
+
+This sort of explicit specification makes it easy to verify if a
+package is the correct version and to revert to a previous release.
+
+== Services ==
+
+Services are collections of one or more packages. A service
+may be composed of a single package (e.g. a single binary file), or
+many packages (e.g. a collection of data packages). In some cases, a
+service binds to a specific port and specifying the ports simplifies
+the creation of load balancer configs needed for inter-server
+communication.
+
+The service configuration is specified in
+prod/cluster/conf/services.yaml. Defining a data service is
+straightforward. For instance, the search_data service simply lists
+the set of suggest_data packages.
+
+search_data:
+  packages:
+    - search_alternate_names
+    - search_amenities
+    - search_index
+
+A binary service is almost the same as a data package, but the port
+needs to be specified. The port needs to be specified because the
+haproxy configs are generated from this port specifications. For
+instance, the search binary service lists the search port.
+
+search:
+  port: 20013
+  packages:
+    - search_bin
+
+== Hosts ==
+
+The hosts config, prod/cluster/conf/hostgroups.yaml, specifies the
+collection of machines and the set of hostgroups. A hostgroup is a
+collection of hosts. An example of a host group might be all the
+servers in a cluster or all the servers of one type. hostgroups are
+convenient short hands for assigning services to hosts. The staging
+hostgroup is very illustrative of how hostgroups might be used:
+
+staging:
+  - '@staging_frontend'
+  - '@staging_backend'
+staging_backend:
+  - '@staging_book'
+  - '@staging_search'
+staging_frontend:
+  - '@staging_apache'
+staging_apache:
+  - staging-apache01.prod.room77.com
+  - staging-apache02.prod.room77.com
+staging_book:
+  - staging-book01.prod.room77.com
+  - staging-book02.prod.room77.com
+staging_search
+  - staging-search01.prod.room77.com
+  - staging-search02.prod.room77.com
+
+== Clusters ==
+
+The cluster config, prod/cluster/conf/clusters.conf, defines the
+machines and services that comprise each cluster. In the cluster
+config, services are allocated to each host or set of host groups.
+
+Once the cluster config is defined, deploying code is simple and
+reliable. From the cluster config, the deployment service computes the
+set of packages and services on each host. Then the deployment service
+verifies that all the packages are the correct version. If not, the
+service deploys the missing packages. Once all the missing packages
+are deployed, then for each service with a package to be updated, the
+deployment service activates all the service’s packages. The
+activation process calls stop for every package in the service, then
+sets the symlink of the package to current, then setlive, and finally
+start. The package should be robust during these operations, but if
+any of these operations fail, the deployment service terminates and
+prompts the user to fix the issue.
+
+Here is an example of a simple cluster including apache, book, and search:
+
+staging:
+  user: foouser
+  data:
+    -
+      hosts: [ '@staging' ]
+      services:
+        - cluster
+        - rsyslog_client
+        - logrotate_rsyslog
+    -
+      hosts: [ '@staging_backend' ]
+      services: [ search_data ]
+    -
+      hosts: [ '@staging_apache' ]
+      services: [ apache ]
+    -
+      hosts: [ '@staging_book' ]
+      services: [ book_bin ]
+
+Let’s walk through the cluster config. The name of the cluster is
+"staging", and the cluster’s user is "foouser". The first data definition
+has a host "@staging". In the hostgroups.yaml, "@staging" defines the set of
+all hosts in the staging cluster. A set of 3 cluster-wide services (cluster,
+rsyslog_client, etc) are associated to the "@staging" hosts. Similarly,
+"@staging_backend" deploys the search_data service to all the backend
+machines. "@staging_apache" has the apache service that must be
+deployed to all apache machines. "@staging_book" is defined in the same
+way as "@staging_apache". Most services are defined similarly.
+
+== Deployspecs ==
+
+The deployspecs, prod/cluster/conf/deployspecs.yaml, define the
+release that should be deployed to a given cluster. For instance,
+suppose that in the releases file there are two releases: ‘20131029’
+and ‘20131106’ and there is a cluster called staging. The convention
+is that there are two corresponding release branches: release-20131029
+and release-20131106. The deployspecs would have a name in the format
+of $CLUSTER-$BRANCH. For instance:
+
+staging-release-20131029
+  cluster: staging:
+  release: ‘20131029’
+staging-release-20131106
+  cluster: staging:
+  release: ‘20131106’
+
+For simplicity, there are a set of tools (prod/push,
+prod/update_packages.py, etc) that accept a $CLUSTER parameter. By
+combining the $CLUSTER parameter with the branch name, $BRANCH, the
+deployspec $CLUSTER-$BRANCH is selected for deployment.
+
+== MPS - How a deployment works ==
+
+The main workhorse script for deployment is
+prod/cluster/cluster.py. In most cases, users interact with prod/push:
+a convenience command that calls cluster.py directly.  cluster.py
+accepts a deployspec name as input. Given a deployspec, cluster.py
+supports 4 commands:
+    populate_repo - for all the packages specified in
+        the deployspec’s release, look at the push machine,
+        e.g. push.prod.room77.com, and if any packages are missing, rsync those
+        packages to push.prod.room77.com:/home/share/repo/$PACKAGE_NAME/
+    deploy - for each host, find the set of packages in the
+        release. These are the packages to deploy. Then for each host,
+        compare the package version to the version to be deployed. If the
+        versions differ, rsync the new package to /home/share/repo/$PACKAGE_NAME/.
+    activate - for each host AND for each service, find the set of packages in
+        the service. These are the packages to activate for this service. Then
+        for each host, for each service, and for each package in the service,
+        check the package’s  /home/share/repo/$PACKAGE_NAME/current to find if
+        the version differs from the version in the release. If any of the packages
+        in the service differs from the release version, activate all the packages
+        in the service. The activation process works as follows:
+            1. For ALL packages in the service, call
+               /home/share/repo/$PACKAGE_NAME/current/control stop
+            2. For ALL packages in the service, change
+               /home/share/repo/$PACKAGE_NAME/current to point to
+               the package in the release AND then call
+               /home/share/repo/$PACKAGE_NAME/current/control setlive
+            3. For ALL packages in the service,
+               /home/share/repo/$PACKAGE_NAME/current/control start
+     restart - this commands takes a space separated list of package names to
+         restart. Even if the package is already activated to the latest version,
+         the activate sequence is called again on this package. This command is
+         useful for restarting server binaries that might need to slurp in data
+         from external databases.
+
+Given a deployspec named $ds, the deployment happens in 3 steps:
+    1. # deploy missing packages to the push machine
+       prod/cluster/cluster.py --deploy-spec $ds populate_repo
+    2. #  populate the cluster with missing packages
+       prod/cluster/cluster.py --deploy-spec $ds deploy
+    3. # activate services in which at least one package version
+       # differs from the release version
+       prod/cluster/cluster.py --deploy-spec $ds activate
+
+== Deployment Example ==
+To really understand the power of a deployment, it is helpful to walk through a mock deployment. Below are some example configs that need to be deployed:
+
+deployspecs.yaml
+staging-release-20131012:
+  cluster: staging
+  release: ‘20131012’
+…
+releases.yaml
+‘20131012’:
+  bar: 1383599382_923ae5_foo
+  foo: 1383599382_923ae5_foo
+  foo_bin: 1383599382_923ae5_foo_bin
+  prod_config: 1383599382_923ae5_prod_config
+  scripts: 1383599382_923ae5_scripts
+…
+services.yaml
+foo_data:
+  packages: [ foo, bar ]
+foo:
+  port: 11100
+  packages: [ foo_bin ]
+general_files:
+   packages: [ prod_config, scripts ]
+…
+hostgroups.yaml
+staging:
+  - ‘@staging_dumb’
+  - ‘@staging_foo’
+staging_dumb:
+   - staging-dumb01.prod.room77.com
+   - staging-dumb02.prod.room77.com
+staging_foo:
+   - staging-foo01.prod.room77.com
+…
+clusters.yaml
+staging:
+  user: walle
+  data:
+    -
+ hosts: [ ‘@staging’]
+      services: [ general_files ]
+    -
+      hosts: [ ‘@staging_foo’ ]
+      services: [ foo_data, foo ] # activated in order! foo_data before foo!
+
+1) prod/push --deploy-spec staging-release-20131012 populate_repo
+
+The deploy-spec staging-release-20131012 specifies the release
+‘20131012’. In the releases.yaml release ‘20131012’, there are 5
+packages: bar, foo, foo_bin, prod_config, and scripts. For each of
+these packages, populate_repo goes to push.prod.room77.com and runs
+the equivalent of an "ls -l /home/share/repo/$package_name/current".
+If the package version matches the version in the release, e.g. for bar it matches
+1383599382_923ae5_bar, then nothing is done. Otherwise, the package is
+pushed to /home/share/repo/$package_name/$package_version_name. To be
+concrete, package bar would be pushed to /home/share/repo/foo/1383599382_923ae5_bar.
+
+2) prod/push --deploy-spec staging-release-20131012 deploy
+Looking at the clusters.yaml, each of the data rules is executed in
+sequence. The first data rule pushes service general_files to all the
+'@staging' hosts. For each host in '@staging' and for each package in
+general_files, deploy runs the same command that was run during
+populate_repo. If the package is missing, the package is deployed to
+this machine. The process is run serially for each data rule in the
+staging cluster of clusters.yaml. Eventually, this should be a
+parallel operation.
+
+3) prod/push --deploy-spec staging-release-20131012 activate
+This command is similar to deploy. For each service on each host, if
+one of the service’s packages has a different version from
+/home/share/repo/$package_name/current. Each package in the service is
+activated. The activation process is described above.
+
+==== MPS Tools ====
+
+There are three main tools for interacting with the packaging system:
+    prod/hotfix - hotfixes the latest release branch or a specified branch
+        with the specified commit AND updates the necessary packages in the
+        prod/cluster/conf/releases.yaml file.
+    prod/make_release - cuts a new release branch, builds the release packages,
+        creates new deployspecs in the prod/cluster/conf/deployspecs.yaml file,
+        updates the packages in the prod/cluster/conf/releases.yaml with the
+        new release and package versions
+    prod/update_packages.py -  given a cluster name and a set of package rules,
+        update the appropriate packages in the prod/cluster/conf/releases.yaml.
+        Internally both prod/hotfix and prod/make_release use this command.
+    prod/push - handles all deployments to clusters
+
+In this section, I describe the main packaging tools as well as discuss some of
+challenging or tricky design choices necessary to make this toolset work well.
+
+== Hotfix ==
+prod/hotfix $git_hash $pkg_rule1 … $pkg_ruleN
+e.g.  prod/hotfix ab234f prod/packager/book_bin prod/packager/arn
+
+In the common case, this command simply hotfixes code to the release
+branch AND updates the required packages. To find the name of the
+release, prod/hotfix assumes the last 8 characters of the branch are a
+date and the date is the name of the release. Alternatively, there are
+two optional parameters, --branch and --release_name, which explicitly
+specify the branch and release to hotfix.
+
+Internally, this command does two tasks:
+    1. git cherry-pick the commit to the given branch. If this step fails
+       (e.g. merge conflict), the command stops execution; however, it
+       succeeds when the commit has already been applied.
+       If the command fails, there are two good options:
+       a. prod/hotfix with the merge commit NOT the original commit hash.
+          Since it already committed, the cherry-pick will be ignored and
+          the appropriate packages will be built.
+       b. OR build the packages manually:
+          From the release branch run
+          prod/update_packages.py $clustername $pkg_rule1 … $pkg_ruleN
+     2. After git cherry-pick, this command uses prod/update_packages.py
+        to update the affected packages specified by the user.
+
+== Make release ==
+This command handles three primary tasks:
+    1. create a new release branch of the form release-YYYYMMDD,
+       e.g. release-20131020
+    2. update the deployspecs.yaml file with new deployspecs:
+       e.g staging-release-YYYYMMDD for all of staging; staging_apache-YYYYMMDD
+       for just the apache machines on staging; and prod-release-YYYYMMDD
+       for the prod cluster.
+    3. Using prod/update_packages.py, build ALL the packages and adds these packages
+       to the releases.yaml with the release name YYYYMMDD (e.g. ‘20131112’).
+
+If this command fails during one of the steps (e.g. failed to build a
+package), you can fix that package, hotfix the release branch with
+that fix, and then run the prod/make_release command again.
+
+== Updating packages ==
+prod/update_packages.py $clustername $pkg_rule1 … $pkg_ruleN
+e.g.  prod/update_packages.py staging prod/config/cluster
+This command handles two primary tasks:
+    1. build the requested packages
+    2. update the releases.yaml with the new package versions
+
+This module has many subtleties, but for day to day tasks, the
+internals are unnecessary. For completeness, this section describes
+some of the conventions and approaches used in building this
+module. The twi topics:
+   How to select the release to update - discusses the convention
+       for finding the releases.yaml file to update when populating
+       new package versions
+   Solving the multi-hotfix dilemma with flock - hotfixing around the
+        same time can still cause conflicts. flock is a filesystem
+        lock used to queue up hotfixes to the conf files.
+
+= How to select the release to update =
+
+To update the releases.yaml file, the script must know the release to
+update. The convention is simple and used in many other parts of the
+code. $clustername-$branchname is the name of the deployspec, and once
+the deployspec is found the release name can be read directly from the
+deployspec. For example, suppose the user specified cluster staging
+and is on branch release-20131020. The name of the deployspec would be
+staging-release-20131020.
+
+= Solving the multi-hotfix dilemma with flock =
+
+In the past, there have been problems with multiple people hotfixing
+at the same time. This creates git conflicts in the package version
+names. To solve this problem, each update to conf runs through the
+module prod/util/queue_cluster_config_updates.py. This module runs
+flock /run/lock/mps -c “command to run” on the push host. flock
+is a special command to grab filesystem locks. This ensure that when
+multiple updates occur around the same that the requests are queued up
+until the previous update has finished.
+
+== Pushing to production ==
+prod/push {deploy|activate|restart|clean_repo} $clustername
+
+Like prod/update_packages.py, this uses the convention
+$clustername-$branchname to select a deployspec to push. Internally,
+this command calls prod/cluster/cluster.py to deploy and
+activate. Internally, the deploy command uses prod/cluster/cluster.py
+populate_repo and deploy commands. activate uses
+prod/cluster/cluster.py activate.
+works.
+
+By convention the push proceeds in two steps. First the backend
+machines are deployed and activated and then the apache machines are
+pushed and activated. Suppose there are clusters named staging and
+staging_apache. The push should proceed as follows on the appropriate
+branch:
+prod/push deploy staging
+prod/push deploy staging_apache
+prod/push activate staging
+prod/push activate staging_apache

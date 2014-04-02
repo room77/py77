@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+DEBUG=1
+source ${PIPELINE_UTILS_DIR}/bash/common.sh
+
+echo Filename: $0
+# exit 1

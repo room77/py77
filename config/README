@@ -1,0 +1,12 @@
+r77_init is the common config file used to setup global variables for r77 source
+code.
+
+The file is linked to /home/share/config/py/r77_init.py
+
+How to update this file:
+
+1. Modify and checkin the file.
+2. Do a `git pull` at /home/r77/src/dev to update the file.
+
+Once /home/r77/src/dev has your changes, they will be automatically reflected.
+
