@@ -12,6 +12,8 @@ There is one additional dependency not in PyPi, GraphViz. To install the necessa
 
 Or the equivalent command for your operating system. Depending on your environment, it may be necessary to add the installed module to your Python path either by setting the PYTHONPATH environment variable or by creating symlinks to the installed module and shared library. On Debian, by default, `gv.py` and `_gv.so` are installed to `/usr/share/pyshared`.
 
+You will also need to update your PYTHONPATH environment variable to include the `pylib/config` directory
+
 ## Components
 
 ### Flash
