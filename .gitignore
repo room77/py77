@@ -1,0 +1,15 @@
+*.swp
+*.swo
+*.swn
+*.swm
+*.swl
+*~
+*#
+*.db
+*.pyc
+e
+pipeline/out
+.nfs*
+.DS_Store
+._.DS_Store
+pylib/mail/templates/inline
