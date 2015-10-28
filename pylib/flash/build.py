@@ -43,8 +43,10 @@ class Builder(CmdHandler):
     """
     # Create the user friendly link to bin dir if it doesn't already exist.
     FileUtils.CreateLink(FileUtils.GetEDir(), FileUtils.GetBinDir())
-    # Create the link to the web test directory
-    FileUtils.CreateLink(FileUtils.GetWebTestHtmlLink(), FileUtils.GetWebTestHtmlDir())
+    # Create the link to the web test directory if it exists
+    if os.path.exists(FileUtils.GetWebTestHtmlLink()):
+      FileUtils.CreateLink(FileUtils.GetWebTestHtmlLink(),
+                           FileUtils.GetWebTestHtmlDir())
 
     gen_makefile = GenMakefile(Flags.ARGS.debug)
     gen_makefile.GenMainMakeFile()
