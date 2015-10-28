@@ -10,6 +10,7 @@ import inspect
 import re
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -28,6 +29,12 @@ from swig_rules import SwigRules
 from rules import Rules, RulesParseError
 from utils import Utils
 
+class Error(Exception):
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return "'%s'" % self.value
 
 class GenMakefile:
   """Generates the makefile for the given rules."""
@@ -50,11 +57,23 @@ class GenMakefile:
 
     (makefile_fd, self.__makefile_name) = tempfile.mkstemp(
         prefix='makefile_', suffix='.main.mak', dir=make_dir)
+
+    # Detect supported compilers
+    self.__gcc_supported = self._CompilerSupported('gcc')
+    self.__clang_supported = self._CompilerSupported('clang')
+
     # Generate dummy files.
     self.ResetMakeFiles()
 
   def __del__(self):
     if not self.__debug: self.Cleanup()
+
+  def _CompilerSupported(self, compiler):
+    with open(os.devnull, 'w') as devnull:
+      exit_code = subprocess.call(
+          '%s --help | head -n1 | grep -q %s' % (compiler, compiler),
+          stdout=devnull, stderr=devnull, shell=True)
+      return exit_code == 0
 
   def Cleanup(self):
     """Remove the build files."""
@@ -71,6 +90,16 @@ class GenMakefile:
   def GetAutoMakeFileName(self, type="cc"):
     """Return: string: The name of the automake file."""
     return  self.__makefile_name.replace('.main.', '.auto.' + type + '.')
+
+  def GetMakeFileTemplate(self):
+    # Prefer gcc
+    if self.__gcc_supported:
+      return 'Makefile.template.gcc'
+    elif self.__clang_supported:
+      return 'Makefile.template.clang'
+    else:
+      raise Error(TermColor.ColorStr(
+        'No supported compiler found. Require gcc or clang', 'RED'))
 
   def ResetMakeFiles(self):
     """Resets the main and auto make files."""
@@ -106,7 +135,7 @@ class GenMakefile:
 
     makefile_template = os.path.join(
         os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))),
-        'Makefile.template')
+        self.GetMakeFileTemplate())
 
     f.write('###############################################################\n')
     f.write('#Template from: %s \n' % makefile_template)
