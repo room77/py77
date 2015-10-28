@@ -12,7 +12,6 @@ import subprocess
 import sys
 import time
 
-import gv  # $ sudo aptitude install libgv-python
 from pygraph.classes import digraph  # $ sudo easy_install python-graph-core
 import pygraph.readwrite.dot as dot  # $ sudo easy_install python-graph-dot
 
@@ -26,6 +25,12 @@ from cmd_handler import CmdHandler
 from rules import Rules
 from utils import Utils
 
+# gv is not necessary for the basic operation of DepGraph, so do not force it
+# to be included.
+try:
+  import gv  # $ sudo aptitude install libgv-python
+except:
+  pass
 
 class DepGraph(CmdHandler):
   """Class to handle depgraph."""
@@ -33,7 +38,8 @@ class DepGraph(CmdHandler):
   @classmethod
   def Init(cls, parser):
     super(DepGraph, cls).Init(parser)
-    parser.add_argument('-m', '--mode', type=str, default='gv',
+    parser.add_argument('-m', '--mode', type=str,
+                        default='gv' if 'gv' in sys.modules else 'text',
                         choices=['gv', 'text'],
                         help='The mode in which the output file is generated.')
     parser.add_argument('-q', '--quiet', action="store_true", default=False,
