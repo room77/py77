@@ -89,6 +89,6 @@ cleanall:
 	@rm -rf $(BINDIR)
 	@echo "deleting *~ files..."
 	@find . -name '*~' -delete
-	@echo "clearing ccache..."
-	@ccache --clear -z
+	# @echo "clearing ccache..."
+	# @ccache --clear -z
 	@echo "done."
