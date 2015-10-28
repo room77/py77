@@ -107,14 +107,14 @@ class CCRules(MakeRules):
         pack = item.get('pack', 0)
         if pack == 1:
           f.write('\t@echo -n "Packing "\n'
-                  '\t$(SRCROOT)/scripts/package %s\n' % target_bin)
+                  '\t$(SRCROOT)/public/bin/codebase/package %s\n' % target_bin)
         elif pack == 2:
           record_access_file = os.path.join(target_dep_dir, target_name + '.files')
           f.write('\t@echo -n "Packing "\n')
           f.write('\t%s --r77_run_main=false --record_file_access '
                   '--record_file_access_output=%s\n' %
                   (target_bin, record_access_file))
-          f.write('\t$(SRCROOT)/scripts/package %s $(shell cat %s)\n' %
+          f.write('\t$(SRCROOT)/public/bin/codebase/package %s $(shell cat %s)\n' %
                   (target_bin, record_access_file))
 
         f.write('\t@echo "Created: %s"\n' % target_bin)
