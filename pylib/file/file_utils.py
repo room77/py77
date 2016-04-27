@@ -105,7 +105,8 @@ class FileUtils:
     """Returns the output dir for the subpath."""
     src_dir = cls.GetSrcRoot()
     # If the src is not already on localdisk, create the output on localdisk.
-    if src_dir.find(cls.GetOutRoot()) != 0: src_dir = cls.GetOutRoot() + src_dir
+    if not cls.IsSameDevice(src_dir, cls.GetOutRoot()):
+      src_dir = cls.GetOutRoot() + src_dir
     return os.path.join(src_dir, subpath)
 
   @classmethod
@@ -428,3 +429,18 @@ class FileUtils:
     with open(file, 'r') as fp:
       res = fp.read()
     return res
+
+  @classmethod
+  def IsSameDevice(cls, path_a, path_b):
+    """Determines if the two paths are on the same. The two paths are expected
+       to exist
+
+    Args:
+      path_a: string: The path to compare
+      path_b: string: The path being compared
+
+    Returns:
+      boolean: Returns True if the two paths are on the same device and False
+               otherwise.
+    """
+    return os.stat(path_a)[stat.ST_DEV] == os.stat(path_b)[stat.ST_DEV]
