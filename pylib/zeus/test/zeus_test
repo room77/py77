@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+# Copyright 2016 Room77, Inc.
+# Author: sball@room77.com (Stephen Ball)
+
+# This script demonstrates how you can set up a convenience script for
+# predefining zeus pipeline variables that will be used every time you run
+# your pipeline through zeus. This is how R77 uses zeus internally for its
+# different pipelines
+
+SCRIPT_DIR=$(cd `dirname $0`; pwd -P)
+
+ZEUS_ID='test'
+ZEUS_OUT_DIRS='feed,out,tmp'
+ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
+ZEUS_PUBLISH_DIR="/home/share/data/test"
+
+ZEUS_CMD="\
+../zeus \
+  --id=${ZEUS_ID} \
+  --root=${ZEUS_ROOT_DIR} \
+  --out_dirs=${ZEUS_OUT_DIRS} \
+  --publish_root=${ZEUS_PUBLISH_DIR} \
+"
+
+${ZEUS_CMD} $@
