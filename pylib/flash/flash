@@ -1,13 +1,23 @@
 #!/bin/bash -e
 
+# Convenience script for running flash
+# The script will handle PYTHONPATH setup if needed which will allow the user
+# to run flash with no additional setup after cloning the repo
+
 # export this parameter to 1 for verbose distcc debug output
 #export DISTCC_VERBOSE=1
 
-FLASH_BIN="`git rev-parse --show-toplevel`/pylib/flash/flash.py"
+FLASH_DIR=$(dirname $(readlink -f $0))
+FLASH_BIN="${FLASH_DIR}/flash.py"
+
+# Add pylib/config to PYTHONPATH if it is not already there
+if ! [[ "${PYTHONPATH}" =~ 'pylib/config' ]] ; then
+  export PYTHONPATH="${PYTHONPATH}:$(dirname ${FLASH_DIR})/config"
+fi
 
 if [[ ! -f ${FLASH_BIN} ]]; then
   echo -e "Could not find: '${FLASH_BIN}'".
-  echo -e "\e[31;01mFailure.\e[0m"
+  echo -e "\033[31;01mFailure.\033[0m"
   exit 1
 else
   ${FLASH_BIN} "$@"

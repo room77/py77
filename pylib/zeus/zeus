@@ -1,10 +1,20 @@
 #!/bin/bash -e
 
-ZEUS_BIN="`git rev-parse --show-toplevel`/pylib/zeus/zeus.py"
+# Convenience script for running zeus
+# The script will handle PYTHONPATH setup if needed which will allow the user
+# to run zeus with no additional setup after cloning the repo
+
+ZEUS_DIR=$(dirname $(readlink -f $0))
+ZEUS_BIN="${ZEUS_DIR}/zeus.py"
+
+# Add pylib/config to PYTHONPATH if it is not already there
+if ! [[ "${PYTHONPATH}" =~ 'pylib/config' ]] ; then
+  export PYTHONPATH="${PYTHONPATH}:$(dirname ${ZEUS_DIR})/config"
+fi
 
 if [[ ! -f ${ZEUS_BIN} ]]; then
   echo -e "Could not find: '${ZEUS_BIN}'".
-  echo -e "\e[31;01mFailure.\e[0m"
+  echo -e "\033[31;01mFailure.\033[0m"
   exit 1
 else
   ${ZEUS_BIN} "$@"
