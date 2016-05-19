@@ -1,0 +1,44 @@
+#!/bin/bash -e
+# Author: Uygar Oztekin
+
+# This script can be used to fetch and install pyinstaller.
+# It is designed to be used via symlinks that contain the name / version
+# information. If you desire another version, create another symlink or rename
+# the existing symlink.
+
+# Pick up the name/version from symlink's name. (anything after install-)
+NAME=`basename $0 | sed 's/install//' | sed 's/^-//g'`
+VERSION=`echo ${NAME} | sed 's/.*-//g'`
+URL="https://github.com/pyinstaller/pyinstaller/releases/download/v${VERSION}/${NAME}.zip"
+
+if [ -h "$0" ] ; then
+  echo
+  echo "This script will clear the current directory and (re)fetch / install"
+  echo "${URL}"
+  echo
+  echo -n "Shall we continue? [y/N]:"
+  read yn
+  [ "${yn}" == "y" ] || exit 0
+else
+  echo "Do not call this script directly. Use one of the symlinks."
+  exit 1
+fi
+
+[ -z ${NAME} ] && exit 0
+
+rm -rf `dirname $0`/"${NAME}"* || true
+rm latest || true
+
+if [ "$1" == "clean" ] ; then
+  echo Clean requested. Exiting.
+  exit 0
+fi
+
+echo Fetching
+
+curl -L -O "${URL}"
+
+unzip -x ${NAME}.zip
+rm ${NAME}.zip
+
+ln -s ${NAME} latest

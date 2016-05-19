@@ -1,0 +1,10 @@
+# Copyright 2015 Room77 Inc. All Rights Reserved.
+#
+
+# Generated Files
+
+# Libraries
+
+# Binaries
+py_bin(name = "flash",
+       src = ["flash.py"])

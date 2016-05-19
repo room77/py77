@@ -6,7 +6,6 @@ __author__ = 'pramodg@room77.com (Pramod Gupta)'
 __copyright__ = 'Copyright 2012 Room77, Inc.'
 
 import glob
-import inspect
 import re
 import os
 import shutil
@@ -134,7 +133,7 @@ class GenMakefile:
     f.write('\n')
 
     makefile_template = os.path.join(
-        os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))),
+        getattr(sys, '_MEIPASS', os.path.dirname(__file__)),  # _MEIPASS is where pyinstaller puts data files
         self.GetMakeFileTemplate())
 
     f.write('###############################################################\n')

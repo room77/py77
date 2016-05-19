@@ -71,7 +71,7 @@ class PyRules(MakeRules):
           f.write('\t@pushd $(PY_TARGET_DEP_DIR_%d);' % index)
           f.write('\tR77_SRC_ROOT=$(SRCROOT) $(PY) %s --onefile '
                   '--paths $(PYTHON_PATHS) '
-                  '--out $(PY_TARGET_DEP_DIR_%d) --name=$(notdir $@) '
+                  '--specpath $(PY_TARGET_DEP_DIR_%d) --name=$(notdir $@) '
                   '--additional-hooks-dir=$(SRCROOT)/pylib/pyinstaller/hooks '
                   '$(PY_SRC_%d);' % (cls.GetPyInstaller(), index, index))
           f.write('\tpopd \n')

@@ -13,3 +13,5 @@ pipeline/out
 .DS_Store
 ._.DS_Store
 pylib/mail/templates/inline
+third_party/pyinstaller/PyInstaller-*
+third_party/pyinstaller/latest
