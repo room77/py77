@@ -127,7 +127,7 @@ class PipelineConfig(singleton.Singleton):
     res['PIPELINE_DATE'] = self.pipeline_date()
     res['PIPELINE_SRC_ROOT'] = FileUtils.GetSrcRoot()
     res['PIPELINE_BASE_DIR'] = self.pipeline_base_dir()
-    res['PIPELINE_UTILS_DIR'] = os.path.join(FileUtils.GetSrcRoot(), 'pylib/zeus/utils')
+    res['PIPELINE_UTILS_DIR'] = os.path.join(os.path.dirname(__file__), 'utils')
 
     if self.pipeline_output_dir(): res['PIPELINE_OUT_ROOT'] = self.pipeline_output_dir()
     if self.pipeline_log_dir(): res['PIPELINE_LOG_DIR'] = self.pipeline_log_dir()
