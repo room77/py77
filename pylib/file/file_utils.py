@@ -98,14 +98,15 @@ class FileUtils:
   @classmethod
   def GetOutRoot(cls):
     """Returns the Bin dir where all the build output is generated."""
+    # TODO: add the ability to override this with a config
     return '/localdisk'
 
   @classmethod
   def GetOutDir(cls, subpath):
     """Returns the output dir for the subpath."""
     src_dir = cls.GetSrcRoot()
-    # If the src is not already on localdisk, create the output on localdisk.
-    if not cls.IsSameDevice(src_dir, cls.GetOutRoot()):
+    # Prefer to output to the out root (localdisk) if it exists
+    if os.path.exists(cls.GetOutRoot()):
       src_dir = cls.GetOutRoot() + src_dir
     return os.path.join(src_dir, subpath)
 
