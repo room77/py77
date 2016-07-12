@@ -10,7 +10,6 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 import os
 import subprocess
 
-import r77_init # pylint: disable=W0611
 from pylib.base.exec_utils import ExecUtils
 from pylib.base.term_color import TermColor
 

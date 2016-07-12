@@ -19,7 +19,6 @@ import json
 import socket
 import urllib
 
-import r77_init  # pylint: disable=W0611
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 from pylib.base.exec_utils import ExecUtils

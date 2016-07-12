@@ -7,7 +7,6 @@ __copyright__ = 'Copyright 2012 Room77, Inc.'
 import commands
 import os
 
-import r77_init  # pylint: disable=W0611
 from pylib.file.file_utils import FileUtils
 from pylib.base.term_color import TermColor
 

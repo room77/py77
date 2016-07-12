@@ -12,7 +12,6 @@ import sys
 import threading
 import types
 
-import r77_init  # pylint: disable=W0611
 from pylib.base.term_color import TermColor
 
 from proto_rules import ProtoRules

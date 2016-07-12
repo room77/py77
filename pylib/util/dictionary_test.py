@@ -4,7 +4,6 @@ Tests for dictionary utils
 
 import unittest
 
-import r77_init
 from pylib.util.dictionary import *
 
 class TestLRUDict(unittest.TestCase):

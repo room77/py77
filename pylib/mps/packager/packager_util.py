@@ -13,7 +13,6 @@ import random
 import time
 import yaml
 
-import r77_init # pylint: disable=W0611
 from pylib.prod.cluster.packages import Packages
 from pylib.util.git_util import GitUtil
 

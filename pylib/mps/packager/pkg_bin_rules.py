@@ -10,7 +10,6 @@ import os
 import shutil
 import subprocess
 
-import r77_init
 from pylib.prod.cluster.packages import Packages
 from pylib.prod.packager.pkg_rules_interface import PkgRulesInterface
 from pylib.prod.packager.pkg_utils import PkgUtils

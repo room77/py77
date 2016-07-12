@@ -3,7 +3,6 @@
 __author__ = 'edelman@room77.com (Nicholas Edelman)'
 __copyright__ = 'Copyright 2013 Room77, Inc.'
 
-import r77_init  # pylint: disable=W0611
 
 from pylib.base.flags import Flags
 

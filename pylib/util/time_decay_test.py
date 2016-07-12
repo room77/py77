@@ -6,7 +6,6 @@ __copyright__ = '2013, Room77, Inc'
 import datetime
 import unittest
 
-import r77_init  # pylint: disable=W0611
 from pylib.util.time_decay import (TimeDecay, TimeStampInTheFutureError)
 
 class TimeDecayTest(unittest.TestCase):

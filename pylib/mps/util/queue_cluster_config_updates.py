@@ -11,7 +11,6 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 
 import os
 
-import r77_init # pylint: disable=W0611
 from pylib.base.flags import Flags
 from pylib.base.exec_utils import ExecUtils
 from pylib.util.git_util import GitUtil

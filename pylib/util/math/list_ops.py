@@ -7,7 +7,6 @@ __copyright__ = "Room 77, Inc. 2013"
 
 import math
 
-import r77_init  # pylint: disable=W0611
 from pylib.util.math.errors import NotDefinedError
 from pylib.util.algorithm import nth_element
 

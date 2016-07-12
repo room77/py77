@@ -4,7 +4,6 @@
 A variety of push utility functions
 """
 
-import r77_init # pylint: disable=W0611
 from pylib.util.git_util import GitUtil
 
 __author__ = 'edelman@room77.com (Nicholas Edelman)'

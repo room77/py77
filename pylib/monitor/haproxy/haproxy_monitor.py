@@ -38,7 +38,6 @@ import logging
 import re
 import urllib
 
-import r77_init  # pylint: disable=W0611
 from pylib.net.mailer import ThrottledMailer
 
 DATE_FORMAT = '%Y%m%d|%H%M%S'

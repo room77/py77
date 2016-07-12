@@ -8,7 +8,6 @@ import glob
 import os
 import socket
 
-import r77_init  # pylint: disable=W0611
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils

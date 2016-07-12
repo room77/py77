@@ -8,7 +8,6 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 import os
 import shutil
 
-import r77_init # pylint: disable=W0611
 from pylib.file.file_utils import FileUtils
 
 class PkgUtils(object):

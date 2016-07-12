@@ -12,7 +12,6 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import r77_init  # pylint: disable=W0611
 from pylib.base.term_color import TermColor
 
 

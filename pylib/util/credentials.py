@@ -8,7 +8,6 @@ __copyright__ = '2014, Room 77, Inc.'
 from ConfigParser import ConfigParser
 import os
 
-import r77_init # pyling: disable=W0611
 from pylib.file.file_utils import FileUtils
 
 def get_username_and_password(service, section=None,

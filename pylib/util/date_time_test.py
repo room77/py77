@@ -10,7 +10,6 @@ __copyright__ = "Room 77, Inc. 2013"
 import datetime
 import unittest
 
-import r77_init  # pylint: disable=W0611
 from pylib.util.date_time import date_range
 
 class DateRangeTest(unittest.TestCase):

@@ -2,17 +2,20 @@
 This is a collection of Python libraries used at Room 77, Inc.
 
 ## Installation
-To run code contained in this directory, install dependencies with
+Clone the repo and include its path in your PYTHONPATH
 
-    pip install -r stable-requirements.txt
+For example:
 
-There is one additional dependency not in PyPi, GraphViz. To install the necessary Python bindings run
+  export PYTHONPATH=${PYTHONPATH}:/home/user/src/pylib
+
+
+Many of the pylib libraries can be used immediately without installing dependencies. The stable-requirements has not been cleaned and contains more dependencies than are necessary. The recommended approach is to not install the stable-requirements and attempt to use the library as is. Only install the requirements when they are needed.
+
+There is one additional dependency not in PyPi: GraphViz. To install the necessary Python bindings run
 
     sudo apt-get install libgv-python
 
 Or the equivalent command for your operating system. Depending on your environment, it may be necessary to add the installed module to your Python path either by setting the PYTHONPATH environment variable or by creating symlinks to the installed module and shared library. On Debian, by default, `gv.py` and `_gv.so` are installed to `/usr/share/pyshared`.
-
-You will also need to update your PYTHONPATH environment variable to include the `pylib/config` directory
 
 ## Components
 

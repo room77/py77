@@ -10,7 +10,6 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 import os
 import yaml
 
-import r77_init # pylint: disable=W0611
 from pylib.prod.packager.packager_util import PackagerUtil, Error as PackagerUtilError
 from pylib.prod.util.queue_cluster_config_updates import QueueClusterConfigUpdates
 from pylib.prod.util.push_util import PushUtil

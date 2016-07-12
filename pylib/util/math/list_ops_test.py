@@ -9,7 +9,6 @@ __copyright__ = "Room 77, Inc. 2013"
 
 import unittest
 
-import r77_init  # pylint: disable=W0611
 from pylib.util.math.list_ops import mean_std, median
 from pylib.util.math.errors import NotDefinedError
 

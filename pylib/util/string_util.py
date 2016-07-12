@@ -7,7 +7,6 @@ __copyright__ = '2013, Room 77, Inc.'
 
 import re
 
-import r77_init
 from pylib.util.iter_util import chunk
 
 def to_unicode(s, encoding='utf-8'):

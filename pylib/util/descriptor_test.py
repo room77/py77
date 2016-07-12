@@ -7,7 +7,6 @@ __copyright__ = '2013, Room77, Inc'
 
 import unittest
 
-import r77_init  # pylint: disable=W0611
 from descriptor import lazy
 
 class LazyPropertyTest(unittest.TestCase):

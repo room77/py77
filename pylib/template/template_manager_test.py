@@ -5,7 +5,6 @@ test for template manager
 __copyright__ = '2013, Room 77, Inc.'
 __author__ = 'Kyle Konrad'
 
-import r77_init  # pylint: disable=W0611
 from pylib.template.template_manager import TemplateManager, DictTemplateManager
 
 import os

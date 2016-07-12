@@ -9,7 +9,6 @@ __author__ = 'Kyle Konrad'
 
 import unittest
 
-import r77_init  # pylint: disable=W0611
 import pylib.net.util
 
 class RpcTest(unittest.TestCase):

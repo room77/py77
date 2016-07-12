@@ -23,7 +23,6 @@ from .haproxy_monitor import HAProxyMonitor
 from .conditions import (more_than_n_down, more_than_proportion_down,
                          any_down_longer_than)
 
-import r77_init  # pylint: disable=W0611
 from prod.cluster.cluster import Cluster
 from pylib.file.file_utils import FileUtils
 from pylib.net.mailer import ThrottledMailer

@@ -9,7 +9,6 @@ __author__ = "Pramod Gupta, pramodg@room77.com"
 
 import unittest
 
-import r77_init  # pylint: disable=W0611
 from pylib.util.decorators.decorations import static_var
 
 

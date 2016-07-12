@@ -6,7 +6,6 @@ __author__ = 'Kyle Konrad <kyle@room77.com>'
 
 import os
 
-import r77_init  # pylint: disable=W0611
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
