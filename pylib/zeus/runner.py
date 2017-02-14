@@ -321,6 +321,7 @@ class Runner(PipelineCmdBase):
     # Check if there is no receiver for the mail.
     if not receiver: return
 
+    mail_domain = Flags.ARGS.mail_domain
     subject = "[%s:%s] Final Status: %s" % (PipelineConfig.Instance().pipeline_id(),
                                             PipelineConfig.Instance().pipeline_date(),
                                             status_description)
@@ -333,7 +334,8 @@ class Runner(PipelineCmdBase):
               len(failed_run), json.dumps(failed_run, indent=2),
               time_taken,
               PipelineConfig.Instance().GetConfigString()))
-    Mailer().send_simple_message(PipelineUtils.ZeusEmailId(), [receiver], subject, body)
+    Mailer().send_simple_message(
+      PipelineUtils.ZeusEmailId(mail_domain), [receiver], subject, body)
 
 
 def main():
