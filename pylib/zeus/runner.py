@@ -61,6 +61,9 @@ class Runner(PipelineCmdBase):
                         help='The mail to use to send info in case of success.')
     parser.add_argument('--failure_mail', type=str, default='',
                         help='The mail to use to send info in case of success.')
+    parser.add_argument('--mail_domain', type=str, default='corp.room77.com',
+                        help='The domain to use when sending automated '
+                             'pipeline mail.')
 
   @classmethod
   def WorkHorse(cls, tasks):
