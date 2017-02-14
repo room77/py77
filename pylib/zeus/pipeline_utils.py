@@ -225,7 +225,8 @@ class PipelineUtils:
     return None
 
   @classmethod
-  def ZeusEmailId(cls):
+  def ZeusEmailId(cls, mail_domain):
     """Returns the email id for zeus."""
-    return ('zeus+%s+noreply@%s.corp.room77.com' %
-            (PipelineConfig.Instance().pipeline_id(), socket.gethostname()))
+    return ('zeus+%s+noreply@%s.%s' %
+            (PipelineConfig.Instance().pipeline_id(), socket.gethostname(),
+             mail_domain))
