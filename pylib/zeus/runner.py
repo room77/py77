@@ -265,8 +265,10 @@ class Runner(PipelineCmdBase):
       receiver = Flags.ARGS.success_mail
     else: receiver = Flags.ARGS.failure_mail
 
+
     # Check if there is no receiver for the mail.
     if not receiver: return
+    mail_domain = Flags.ARGS.mail_domain
     status_description = Runner.EXITCODE_DESCRIPTION[status_code]
     subject = "[%s:%s] %s : %s" % (PipelineConfig.Instance().pipeline_id(),
                                    PipelineConfig.Instance().pipeline_date(),
@@ -275,10 +277,12 @@ class Runner(PipelineCmdBase):
     body = 'Executed task: %s. \nStatus:%s \nTime: %.2fs.' % (task, status_description, time_taken)
     if msg:
       body += '\n%s' % msg
-      Mailer().send_simple_message(PipelineUtils.ZeusEmailId(), [receiver], subject, body)
+      Mailer().send_simple_message(
+        PipelineUtils.ZeusEmailId(mail_domain), [receiver], subject, body)
     else:
-      Mailer().send_message_from_files(PipelineUtils.ZeusEmailId(), [receiver], subject, [log_file],
-                                       body)
+      Mailer().send_message_from_files(
+        PipelineUtils.ZeusEmailId(mail_domain), [receiver], subject, [log_file],
+        body)
 
   @classmethod
   def _WriteDirsStatus(cls, dirs_status):
