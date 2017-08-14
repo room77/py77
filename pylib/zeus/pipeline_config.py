@@ -21,6 +21,12 @@ Flags.PARSER.add_argument('--root',
 Flags.PARSER.add_argument('--publish_root',
                           type=str, default='',
                           help='The directory specifying where the output data is published to.')
+Flags.PARSER.add_argument('--bin_root',
+                          type=str, default='',
+                          help='The directory specifying where pipeline specific binaries and scripts live.')
+Flags.PARSER.add_argument('--utils_root',
+                          type=str, default=os.path.join(os.path.dirname(__file__), 'utils'),
+                          help='The directory specifying where common pipeline utilities live.')
 Flags.PARSER.add_argument('--nolog_output', action='store_true', default=False,
                           help='Do not Logs all the execution output to a file.')
 Flags.PARSER.add_argument('--log_to_tmp', action='store_true', default=False,
@@ -41,10 +47,12 @@ class PipelineConfig(singleton.Singleton):
   Members:
     _id: string: The id for the pipeline.
     _pipeline_base_dir: string: The src root dir for the pipeline.
+    _pipeline_bin_dir: string: The directory containing pipeline specific binaries and scripts
     _pipeline_date: string: The date for which the pipeline is being run.
     _pipeline_output_dir: string: The output directory of the pipeline.
     _pipeline_log_dir: string: The output directory of the logs.
     _pipeline_publish_dir: string: The directory where the output is published.
+    _pipeline_utils_dir: string: The directory containing common pipeline utilities.
     _subdirs: dict {string, string}: The dictionary of SUBDIR_IDS to the paths of the
         subdirectories.
   """
@@ -58,6 +66,14 @@ class PipelineConfig(singleton.Singleton):
     self._pipeline_base_dir = FileUtils.GetAbsPathForFile(Flags.ARGS.root)
     if not os.path.isdir(self._pipeline_base_dir):
       TermColor.Fatal('Invalid Root directory: %s' % Flags.ARGS.root)
+
+    # Set the pipeline specific binary directory, if specified
+    self._pipeline_bin_dir = ''
+    if Flags.ARGS.bin_root:
+      self._pipeline_bin_dir = FileUtils.GetAbsPathForFile(Flags.ARGS.bin_root)
+
+    # Set the pipeline utilities directory
+    self._pipeline_utils_dir = FileUtils.GetAbsPathForFile(Flags.ARGS.utils_root)
 
     # Create all necessary directories.
     self._pipeline_output_dir = ''
@@ -78,6 +94,14 @@ class PipelineConfig(singleton.Singleton):
   def pipeline_base_dir(self):
     """Returns: string: the source root."""
     return self._pipeline_base_dir
+
+  def pipeline_bin_dir(self):
+    """Returns: string: the bin root."""
+    return self._pipeline_bin_dir
+
+  def pipeline_utils_dir(self):
+    """Returns: string: the utils root."""
+    return self._pipeline_utils_dir
 
   def pipeline_output_dir(self):
     """Returns: string: the pipeline output directory."""
@@ -126,8 +150,9 @@ class PipelineConfig(singleton.Singleton):
     res['PIPELINE_DATE'] = self.pipeline_date()
     res['PIPELINE_SRC_ROOT'] = FileUtils.GetSrcRoot()
     res['PIPELINE_BASE_DIR'] = self.pipeline_base_dir()
-    res['PIPELINE_UTILS_DIR'] = os.path.join(os.path.dirname(__file__), 'utils')
+    res['PIPELINE_UTILS_DIR'] = self.pipeline_utils_dir()
 
+    if self.pipeline_bin_dir(): res['PIPELINE_BIN_DIR'] = self.pipeline_bin_dir()
     if self.pipeline_output_dir(): res['PIPELINE_OUT_ROOT'] = self.pipeline_output_dir()
     if self.pipeline_log_dir(): res['PIPELINE_LOG_DIR'] = self.pipeline_log_dir()
     if self.pipeline_publish_dir(): res['PIPELINE_PUBLISH_DIR'] = self.pipeline_publish_dir()
