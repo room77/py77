@@ -11,7 +11,7 @@ import socket
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
-from pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_config import PipelineConfig
 
 class PipelineUtils:
   """Utility class."""

@@ -15,9 +15,9 @@ from pylib.base.exec_utils import ExecUtils
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from pipeline_cmd_base import PipelineCmdBase
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_cmd_base import PipelineCmdBase
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 class Exporter(PipelineCmdBase):
   """Class to handle export of the output directory to a public location."""
@@ -50,7 +50,7 @@ class Exporter(PipelineCmdBase):
     all_tasks = []
     dirs_to_export = set()
     out_dir_to_task_map = {}
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       for task in set_tasks:
         all_tasks += [task]
         out_dir = PipelineUtils.GetOutDirForTask(task)
@@ -85,7 +85,7 @@ class Exporter(PipelineCmdBase):
 
     # Run all the copy tasks.
     successful_dirs = []; failed_dirs = []
-    args = itertools.izip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
+    args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
                           src_dirs, target_dirs)
     dir_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
     if not dir_res:

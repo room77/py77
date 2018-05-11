@@ -15,9 +15,9 @@ from pylib.base.term_color import TermColor
 from pylib.base.exec_utils import ExecUtils
 from pylib.file.file_utils import FileUtils
 
-from build import Builder
-from cmd_handler import CmdHandler
-from utils import Utils
+from pylib.flash.build import Builder
+from pylib.flash.cmd_handler import CmdHandler
+from pylib.flash.utils import Utils
 
 class Runner(CmdHandler):
   """Class to handle run."""
@@ -55,7 +55,7 @@ class Runner(CmdHandler):
     os.chdir(FileUtils.GetSrcRoot())
 
     pipe_output = len(successful_build) > 1
-    args = itertools.izip(itertools.repeat(cls), itertools.repeat('_RunSingeRule'),
+    args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeRule'),
                           successful_build, itertools.repeat(pipe_output))
     rule_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
     successful_run = []; failed_run = []

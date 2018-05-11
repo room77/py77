@@ -10,7 +10,7 @@ import os
 import subprocess
 import yaml
 
-from control_base import ControlBase
+from pylib.mps.packager.shared.control_base import ControlBase
 
 class PkgController(ControlBase):
   """ control script for data packages"""
@@ -25,7 +25,7 @@ class PkgController(ControlBase):
     """
     version_dir = self._get_setlive_dir(__file__)
     # create the symlinks
-    for src, link in self._config['syms'].iteritems():
+    for src, link in self._config['syms'].items():
       self._create_link(os.path.join(version_dir, src), link)
 
 if __name__ == '__main__':

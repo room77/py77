@@ -5,8 +5,13 @@ RPC util functions
 __copyright__ = '2013, Room 77, Inc.'
 __author__ = 'Kyle Konrad'
 
-from ConfigParser import ConfigParser
-import md5
+# Python 2/3 compatibility
+try:
+  from configparser import ConfigParser # Python 3
+except ImportError:
+  from ConfigParser import ConfigParser # Python 2
+
+from hashlib import md5
 import json
 import os
 import requests
@@ -18,7 +23,11 @@ from pylib.base.environment import IN_PRODUCTION
 from pylib.file.file_utils import FileUtils
 
 _PATH_PREFIX = 'https://room77.com' if IN_PRODUCTION else 'http://localhost'
+_CACHE = {
+  'salt': None
+}
 
+# this must match value in meta/util/method_utils.cc
 def __get_cookie_salt():
   CONFIG_FILE = 'static_data/push/auto/credentials/web.cfg'
   config_parser = ConfigParser()
@@ -28,18 +37,18 @@ def __get_cookie_salt():
     raise ValueError('config file not found: %s' % CONFIG_FILE)
   return config_parser.get('web', 'user_cookie_salt')
 
-# this must match value in meta/util/method_utils.cc
-__COOKIE_SALT = __get_cookie_salt()
-
 def verify_cookie(cookie):
   """
   Verify that a Room 77 cookie is valid
   """
+  if not _CACHE['salt']:
+    _CACHE['salt'] = __get_cookie_salt()
+
   try:
     r77_id, verification_code = cookie.split('%3B') # URI-encoded semicolon
   except ValueError:
     return False # no semicolon
-  return verification_code == md5.new(r77_id + __COOKIE_SALT).hexdigest()[:5]
+  return verification_code == md5.new(r77_id + _CACHE['salt']).hexdigest()[:5]
 
 def get_r77_id(cookie):
   """
@@ -66,8 +75,8 @@ def web_response(request_func):
                        response.status_code)
     try:
       return response.json()
-    except ValueError, error: # invalid JSON
-      print response.text
+    except ValueError as error: # invalid JSON
+      print(response.text)
       raise error
   return decorated
 

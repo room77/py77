@@ -12,9 +12,9 @@ from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from pipeline_cmd_base import PipelineCmdBase
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_cmd_base import PipelineCmdBase
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 class Publisher(PipelineCmdBase):
   """Class to handle publishing the dirs for the pipeline date."""
@@ -47,7 +47,7 @@ class Publisher(PipelineCmdBase):
     all_tasks = []
     dirs_to_publish = set()
     publish_dir_to_task_map = {}
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       for task in set_tasks:
         all_tasks += [task]
         publish_dir = PipelineUtils.GetPublishDirForTask(task)

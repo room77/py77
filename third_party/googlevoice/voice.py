@@ -1,6 +1,6 @@
-from conf import config
-from util import *
-import settings
+from .conf import config
+from .util import *
+from . import settings
 import os
 
 if settings.DEBUG:
@@ -58,7 +58,7 @@ class Voice(object):
         if email is None:
             email = config.email
         if email is None:
-            email = input('Email address: ')
+            email = eval(input('Email address: '))
         
         if passwd is None:
             passwd = config.password
@@ -129,7 +129,7 @@ class Voice(object):
         """
         Returns a list of ``Phone`` instances attached to your account.
         """
-        return [Phone(self, data) for data in self.contacts['phones'].values()]
+        return [Phone(self, data) for data in list(self.contacts['phones'].values())]
     phones = property(phones)
 
     def settings(self):
@@ -240,7 +240,7 @@ class Voice(object):
         """
         Performs message operations, eg deleting,staring,moving
         """
-        data = kwargs.items()
+        data = list(kwargs.items())
         for msg in msgs:
             if isinstance(msg, Message):
                 msg = msg.id

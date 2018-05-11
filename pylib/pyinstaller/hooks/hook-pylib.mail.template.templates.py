@@ -1,4 +1,4 @@
-print 'templates hook'
+print('templates hook')
 
 import os
 

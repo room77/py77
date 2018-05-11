@@ -18,9 +18,9 @@ from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 from pylib.util.mail.mailer import Mailer
 
-from pipeline_cmd_base import PipelineCmdBase
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_cmd_base import PipelineCmdBase
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 class Runner(PipelineCmdBase):
   """Class to handle run."""
@@ -88,13 +88,13 @@ class Runner(PipelineCmdBase):
     aborted_task = None
 
     dirs_status = {}
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       if aborted_task:
         failed_run += set_tasks
         continue
 
       # Run all the tasks at the same priority in parallel.
-      args = itertools.izip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
+      args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
                             set_tasks)
       task_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
       # task_res = []
@@ -141,7 +141,7 @@ class Runner(PipelineCmdBase):
           priority. Note: the dict is ordered by priority.
 
     """
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       for task in set_tasks:
         rel_path = PipelineUtils.GetTaskOutputRelativeDir(task)
         PipelineConfig.Instance().CreateAllSubDirsForPath(rel_path)
@@ -200,7 +200,7 @@ class Runner(PipelineCmdBase):
     """
     rel_path = PipelineUtils.GetTaskOutputRelativeDir(task)
     vars = {}
-    for k, v in PipelineConfig.Instance().GetAllSubDirsForPath(rel_path).iteritems():
+    for k, v in PipelineConfig.Instance().GetAllSubDirsForPath(rel_path).items():
       vars[k] = v
       prev_dir = FileUtils.GetPreviousDatedDir(v)
       if not prev_dir: prev_dir = v
@@ -291,8 +291,8 @@ class Runner(PipelineCmdBase):
     Args:
       dirs_status: dict {string, EXITCODE}: Dict of dir -> exit status.
     """
-    for k, v in dirs_status.iteritems():
-      FileUtils.RemoveFiles([os.path.join(k, x) for x in Runner.EXITCODE_FILE.itervalues()])
+    for k, v in dirs_status.items():
+      FileUtils.RemoveFiles([os.path.join(k, x) for x in Runner.EXITCODE_FILE.values()])
       status_file = Runner.EXITCODE_FILE.get(v, '')
       if not status_file: continue
       FileUtils.CreateFileWithData(os.path.join(k, status_file))

@@ -145,7 +145,7 @@ class Server(object):
         """
         subprocess.call(['kill', '-'+signal, str(pid)])
 
-      print 'shutting down'
+      print('shutting down')
       Timer(delay, lambda: stop(stop_loop)).start()
 
     @self.app.route('/_shutdown', methods=['GET', 'POST'])

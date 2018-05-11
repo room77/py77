@@ -10,6 +10,6 @@ def advance_generator_once(f):
   """
   def decorated(*args, **kwargs):
     gen = f(*args, **kwargs)
-    assert gen.next() is None
+    assert next(gen) is None
     return gen
   return decorated

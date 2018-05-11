@@ -67,4 +67,4 @@ def median(x):
   else:
     lower_elt = nth_element(x, int(len(x) / 2) - 1)[0]
     upper_elt = nth_element(x, int(len(x) / 2))[0]
-    return float(lower_elt + upper_elt)/2
+    return float(lower_elt + upper_elt) / 2

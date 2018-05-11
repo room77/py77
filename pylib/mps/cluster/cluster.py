@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 """Deploys and activates deploy specs"""
+from __future__ import print_function
 
 __author__ = 'chernyak@room77.com (Michael Chernyak)'
 __copyright__ = 'Copyright 2013 Room77, Inc.'
 
 import copy
-import multiplecmd
+import pylib.mps.cluster.multiplecmd as multiplecmd
 from hashlib import md5
 import os
 import subprocess
@@ -14,7 +15,7 @@ import sys
 import time
 import yaml
 
-from packages import Packages
+from pylib.mps.cluster.packages import Packages
 
 class Error(Exception):
   def __init__(self, value):
@@ -179,7 +180,7 @@ class Cluster(object):
       port = None
       if 'port' in service:
         port = service['port']
-      for host,package_versions in service['hosts'].iteritems():
+      for host,package_versions in service['hosts'].items():
         items = []
         # if ANY package in the service needs to be restarted, then
         # you should restart ALL packages in the service
@@ -237,7 +238,7 @@ class Cluster(object):
         cpkg_sig = self._config_dir_sig(lpath, deploy_spec_name)
         # check if the package signatures differ
         if not sig == cpkg_sig:
-          s = raw_input(('Current cluster config files differ from the repo: %s.'
+          s = input(('Current cluster config files differ from the repo: %s.'
                          ' Would you like to create a new cluster package?'
                          ' Note: once you do, you will need to rerun the '
                          ' command. ([Y]/N) ') % lpath)
@@ -260,7 +261,7 @@ class Cluster(object):
       user=self.clusters[cluster_name].get('user', ''), key=ssh_key,
       dry_run=dry_run, verbose=verbose, compress=True)
     pkgs_obj.get_versions() # preload versions of all packages on the host
-    for pname, pset in packages.iteritems():
+    for pname, pset in packages.items():
       for pver in pset:
         pkgs_obj.push(self.local_root, pname, pver)
         # activate the cluster config
@@ -269,14 +270,14 @@ class Cluster(object):
 
   def clean_repo(self, hostgroup, ssh_key, dry_run=True, verbose=False):
     required_pkg_versions = set()
-    for release, packages in sorted(self.releases.iteritems()):
-      for pkg_name, version in sorted(packages.iteritems()):
+    for release, packages in sorted(self.releases.items()):
+      for pkg_name, version in sorted(packages.items()):
         required_pkg_versions.add((pkg_name, version))
     now = time.time()
 
     for host in sorted(self.get_hosts([hostgroup])):
       if verbose:
-        print "processing host", host
+        print("processing host", host)
       pkgs_obj = Packages(host, user='walle', key=ssh_key,
               dry_run=dry_run, verbose=verbose)
       host_packages =  pkgs_obj.get_packages()
@@ -322,7 +323,7 @@ class Cluster(object):
     subprocess.check_call(
       'flash --pkg_version_prefix=%s run prod/config/cluster' % pkg_prefix,
       shell=True)
-    print 'generated cluster package %s and updated releases.yaml' % pkg_name
+    print('generated cluster package %s and updated releases.yaml' % pkg_name)
 
   def _create_spec(self, deploySpec):
     spec = []
@@ -354,7 +355,7 @@ class Cluster(object):
               package_versions[package] = override['version']
           filter_services = None
       except:
-        print >> sys.stderr, "invalid override", override
+        print("invalid override", override, file=sys.stderr)
         raise
       self._create_spec_helper(spec, deploySpec['cluster'], package_versions,
         filter_services = filter_services,
@@ -389,7 +390,7 @@ class Cluster(object):
         if filter_services and not service_name in filter_services:
           continue
         # check if this service is already in the spec
-        s = filter(lambda (s): s['name'] == service_name, spec)
+        s = [s for s in spec if s['name'] == service_name]
 
         service_already_seen = True
         if len(s) == 0:
@@ -401,7 +402,7 @@ class Cluster(object):
             s['port'] = self.services[service_name]['port']
           s['hosts'] = {}
           spec.append(s)
-          s = filter(lambda (s): s['name'] == service_name, spec)
+          s = [s for s in spec if s['name'] == service_name]
 
         if len(s) == 1:
           # the service has been defined once in the spec
@@ -432,8 +433,8 @@ class Cluster(object):
             # if the service has been seen in another context (e.g. as part of
             # a rule for a different host), verify that there are no duplicate
             # packages
-            for p,v in package_versions.iteritems():
-              pv = filter(lambda(pv): pv[0] == p, s['hosts'][host])
+            for p,v in package_versions.items():
+              pv = [pv for pv in s['hosts'][host] if pv[0] == p]
               if len(pv) > 1:
                 raise Error('Duplicate package %s' % p)
               elif len(pv) == 1:
@@ -444,7 +445,7 @@ class Cluster(object):
   def _create_deploy_spec(self, spec):
     ds = {}
     for service in spec:
-      for host,package_versions in service['hosts'].iteritems():
+      for host,package_versions in service['hosts'].items():
         if not host in ds:
           ds[host] = []
         ds[host].extend(package_versions)
@@ -465,24 +466,24 @@ class Cluster(object):
     with open(deployspecs_f, 'r') as f:
       deployspecs = yaml.safe_load(f)
     if not deployspec in deployspecs:
-      print 'deployspec %s NOT found in %s' % (deployspec, deployspecs_f)
+      print('deployspec %s NOT found in %s' % (deployspec, deployspecs_f))
       return ''
     with open(releases_f, 'r') as f:
       releases = yaml.safe_load(f)
     release_name = deployspecs[deployspec]['release']
     if not release_name in releases:
-      print 'release %s NOT found in %s' % (release_name, releases_f)
+      print('release %s NOT found in %s' % (release_name, releases_f))
       return ''
     # transition code. TODO(edelman) remove once everything is in the new
     # conf_manual format
     if not os.path.exists(clusters_f):
-      print 'cluster file %s is in the old format' % clusters_f
+      print('cluster file %s is in the old format' % clusters_f)
       return ''
     with open(clusters_f, 'r') as f:
       clusters = yaml.safe_load(f)
     cluster_name = deployspecs[deployspec]['cluster']
     if not cluster_name in clusters:
-      print 'cluster %s NOT found in %s' % (cluster_name, clusters_f)
+      print('cluster %s NOT found in %s' % (cluster_name, clusters_f))
       return ''
     cluster_str = yaml.safe_dump(clusters[cluster_name], default_flow_style=False)
     release_str = yaml.safe_dump(releases[release_name], default_flow_style=False)
@@ -500,7 +501,7 @@ class Cluster(object):
     """
     all_packages = {}
     for service in spec:
-      for host, packages in service['hosts'].iteritems():
+      for host, packages in service['hosts'].items():
         for package in packages:
           pname = package[0]
           pversion = package[1]
@@ -514,7 +515,7 @@ class Cluster(object):
     Args:
       msg - the text to decorate
     """
-    print "%s%s%s" % ('\033[0;31m', msg, '\033[0;m')
+    print("%s%s%s" % ('\033[0;31m', msg, '\033[0;m'))
 
 if __name__ == '__main__':
   import argparse

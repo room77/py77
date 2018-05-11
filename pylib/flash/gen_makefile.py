@@ -17,16 +17,16 @@ import tempfile
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from cc_rules import CCRules
-from js_rules import JSRules
-from ng_rules import NGRules
-from nge2e_rules import NGe2eRules
-from pkg_rules import PkgRules
-from proto_rules import ProtoRules
-from py_rules import PyRules
-from swig_rules import SwigRules
-from rules import Rules, RulesParseError
-from utils import Utils
+from pylib.flash.cc_rules import CCRules
+from pylib.flash.js_rules import JSRules
+from pylib.flash.ng_rules import NGRules
+from pylib.flash.nge2e_rules import NGe2eRules
+from pylib.flash.pkg_rules import PkgRules
+from pylib.flash.proto_rules import ProtoRules
+from pylib.flash.py_rules import PyRules
+from pylib.flash.swig_rules import SwigRules
+from pylib.flash.rules import Rules, RulesParseError
+from pylib.flash.utils import Utils
 
 class Error(Exception):
   def __init__(self, value):
@@ -79,7 +79,7 @@ class GenMakefile:
     try:
       files = glob.glob(self.__makefile_name.replace('.main.mak', '.*'))
       for file in files: os.remove(file)
-    except OSError, e:
+    except OSError as e:
       TermColor.VInfo(2, 'Could not Cleanup make files. Error: %s' % e)
 
   def GetMakeFileName(self):
@@ -205,7 +205,7 @@ class GenMakefile:
           successful_rules.get(rule_type_base, []) + [target])
 
     # Generate the automake file for each rule type.
-    for (k, v) in specs.items():
+    for (k, v) in list(specs.items()):
       if k == 'cc':
         CCRules.WriteMakefile(v, self.GetAutoMakeFileName('cc'))
       elif k == 'js':

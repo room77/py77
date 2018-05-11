@@ -7,7 +7,7 @@ import re
 import sys
 import traceback
 
-from flags import Flags
+from pylib.base.flags import Flags
 
 Flags.PARSER.add_argument('-v', '--verbose', type=int, default=0,
                           help='Verbosity level.')

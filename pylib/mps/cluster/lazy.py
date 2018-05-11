@@ -9,7 +9,7 @@ import os.path
 import time
 import yaml
 
-import packages
+import pylib.mps.cluster.packages as packages
 
 def push(p, packages, args):
   p.push(args.local_root, args.package, args.version)
@@ -20,7 +20,7 @@ def f_import(p, packages, args):
   else:
     src = packages[args.package]['src']
   version = p.f_import(src, args.package, args.version)
-  print version
+  print(version)
 
 def list(p, packages, args):
   versions = p.get_versions(args.package)
@@ -32,10 +32,10 @@ def list(p, packages, args):
   for v in versions:
     if args.pretty:
       t, Null, ver = v.partition('_')
-      print "%s %s  %s  %s" %  ('*' if current == v else ' ',
-        v + (maxlen-len(v)) * ' ', time.asctime(time.localtime(long(t))), ver)
+      print("%s %s  %s  %s" %  ('*' if current == v else ' ',
+        v + (maxlen-len(v)) * ' ', time.asctime(time.localtime(int(t))), ver))
     else:
-      print v
+      print(v)
 
 def remove(p, packages, args):
   p.remove(args.package, args.version)
@@ -52,7 +52,7 @@ def activate(p, packages, args):
 def get_current(p, packages, args):
   current = p.get_current(args.package)
   if current:
-    print current
+    print(current)
 
 def set_current(p, packages, args):
   p.set_current(args.package, args.version)

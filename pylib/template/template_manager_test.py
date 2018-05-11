@@ -1,6 +1,7 @@
 """
 test for template manager
 """
+from __future__ import print_function
 
 __copyright__ = '2013, Room 77, Inc.'
 __author__ = 'Kyle Konrad'
@@ -16,11 +17,11 @@ class TemplateManagerTest(unittest.TestCase):
     my_dir = os.path.dirname(__file__)
     self._template_file = os.path.join(my_dir, self._TEMPLATE_FILE)
     with open(self._template_file, 'w') as f:
-      print >>f, '''
+      print('''
       <html><body><p>
           My variable is {{ var }}
       </html></body></p>
-      '''
+      ''', file=f)
     self._tm = TemplateManager(my_dir)
 
   def tearDown(self):

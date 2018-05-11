@@ -38,7 +38,7 @@ class UpdatePackages(object):
     self._release_name = release_name
     prefix_lambda = \
       lambda x: os.path.join(self.RULES_DIR, x) if not self.RULES_DIR in x else x
-    self._rules = map(prefix_lambda, rules)
+    self._rules = list(map(prefix_lambda, rules))
 
   def build_update_release(self):
     """builds the requested packages, updates the releases file including
@@ -57,9 +57,9 @@ class UpdatePackages(object):
     # update the submodule to get the latest cluster info
     GitUtil.update_submodules()
     # success!
-    print TermColor.ColorStr(
+    print(TermColor.ColorStr(
       'Updated releases.yaml for RULES: %s' % (' '.join(self._rules)),
-      'GREEN')
+      'GREEN'))
 
 if __name__ == '__main__':
   # setup the parser

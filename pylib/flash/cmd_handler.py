@@ -9,8 +9,8 @@ import os
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 
-from rules import Rules
-from utils import Utils
+from pylib.flash.rules import Rules
+from pylib.flash.utils import Utils
 
 class CmdHandler(object):
   """Base class for various command handlers."""

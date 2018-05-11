@@ -5,7 +5,6 @@ __author__ = 'Andrea Tacchetti - atacchet@room77.com - Contact: kyle@'
 __copyright__ = '2013, Room77, Inc'
 
 import datetime
-import math
 from pylib.base.flags import Flags
 
 

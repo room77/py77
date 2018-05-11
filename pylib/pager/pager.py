@@ -77,7 +77,7 @@ class Pager:
     return out
 
   def Info(self):
-    print self._InfoString()
+    print(self._InfoString())
 
   def MailInfo(self, sender, receiver):
     import smtplib
@@ -122,23 +122,23 @@ class Pager:
   def SendAlert(self, msg, index = 0):
     list = self._active_list
     n = (self._GetPrimary() + index) % len(list)
-    print "Paging " + list[n][1] + " with message: " + msg
+    print("Paging " + list[n][1] + " with message: " + msg)
     if not self.dry_run: self._SendAlertToPhone(list[n][0], msg)
 
   def _PrintStatus(self):
-    if len(self._status) > 0: print "Status : Message ID"
-    for key, value in self._status.items():
-      print value["status"] + " : " + key
+    if len(self._status) > 0: print("Status : Message ID")
+    for key, value in list(self._status.items()):
+      print(value["status"] + " : " + key)
 
   def _ProcessStatus(self):
     more = "\nSee https://docs.google.com/a/room77.com/document/d/1YMrE5nM4aTG65ah6B3G_TxOG3vEKs4E84yKc4iAxH38/edit"
-    for key, value in self._status.items():
+    for key, value in list(self._status.items()):
       if value["status"] == self.Status.NEW:
         self.SendAlert("Alert. Please check your email. Subject: " + value["subject"] + more, 0)
       if value["status"] == self.Status.OLD:
         self.SendAlert("Alert. Please check your email. Subject: " + value["subject"] + more, 1)
       # print value["status"] + " : " + key
-    remove_list = [k for (k,v) in self._status.items() if v["status"] == self.Status.OLD or v["status"] == self.Status.REPLIED ]
+    remove_list = [k for (k,v) in list(self._status.items()) if v["status"] == self.Status.OLD or v["status"] == self.Status.REPLIED ]
     for key in remove_list: del(self._status[key])
 
   def _ReadStatusFile(self):
@@ -146,7 +146,7 @@ class Pager:
     data = open(self.status_file).read()
     if (data == None or data == ""): return
     self._status = json.loads(data)
-    for key, value in self._status.items():
+    for key, value in list(self._status.items()):
       if value["status"] == self.Status.NEW: self._status[key]["status"] = self.Status.OLD
 
   def _WriteStatusFile(self):
@@ -167,7 +167,7 @@ class Pager:
       self._status[mid]["subject"] = subject
       self._status[mid]["body"] = body
     if re.match(self.reply_match_pattern, subject):
-      print "At least one reply found muting current alarms"
+      print("At least one reply found muting current alarms")
       self.dry_run = 1
 
   def _FetchMails(self):
@@ -176,7 +176,7 @@ class Pager:
     mail.user(self.monitor_email)
     mail.pass_(self.monitor_pass)
     n = len(mail.list()[1])
-    print "Found " + str(n) + " new emails."
+    print("Found " + str(n) + " new emails.")
     for i in range(n):
       mid = rid = date = sender = subject = body = ""
       body_started = 0
@@ -202,7 +202,7 @@ class Pager:
     # If offset_days is 0, number of days from some monday. mod 7 of this number
     # is 0 if it is a monday. Rotation occurs at 00:00, every monday.
     days = (datetime.datetime.today() - datetime.datetime.utcfromtimestamp(0)).days + 3 + offset_days
-    return (days / 7) % len(self._active_list)
+    return days // 7 % len(self._active_list)
 
   def _SendAlertToPhone(self, phone, msg):
     if not self._sent_one:

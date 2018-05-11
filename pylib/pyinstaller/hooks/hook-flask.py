@@ -1,1 +1,1 @@
-print 'flask hook'
+print('flask hook')

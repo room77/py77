@@ -13,8 +13,8 @@ from pylib.base.term_color import TermColor
 from pylib.base.exec_utils import ExecUtils
 from pylib.file.file_utils import FileUtils
 
-from make_rules import MakeRules
-from utils import Utils
+from pylib.flash.make_rules import MakeRules
+from pylib.flash.utils import Utils
 
 
 class CCRules(MakeRules):

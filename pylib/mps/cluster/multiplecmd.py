@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 
 import os
 
@@ -68,12 +69,12 @@ if __name__ == '__main__':
     i, comment = arg
     random.seed(i)
     s = random.randint(0, 10)
-    print i, comment
+    print(i, comment)
     time.sleep(s)
     return i
 
   def done(exit_code,func, arg, ctx):
-    print exit_code
+    print(exit_code)
     if ctx['i'] < 10:
       ctx['mcmd'].add_job(f, (ctx['i'], ':' + '*' * ctx['i']), done, ctx)
       ctx['i'] += 1

@@ -132,7 +132,7 @@ class PipelineConfig(singleton.Singleton):
       dict {string, string}: The dictionary of SUBDIR IDS to actual paths.
     """
     res = {}
-    for k, v in self.pipeline_subdirs().iteritems():
+    for k, v in self.pipeline_subdirs().items():
       dir = os.path.join(v, path)
       if add_date:  dir = os.path.join(dir, self.pipeline_date())
       res[k] = dir
@@ -167,7 +167,7 @@ class PipelineConfig(singleton.Singleton):
     Returns:
       dict {string, string}: The dictionary of SUBDIR IDS to actual paths.
     """
-    for k, v in self.GetAllSubDirsForPath(path).iteritems():
+    for k, v in self.GetAllSubDirsForPath(path).items():
       FileUtils.MakeDirs(v)
 
   def GetConfigString(self):

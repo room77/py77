@@ -21,16 +21,16 @@ class VoiceTest(TestCase):
             self.voice.cancel(self.outgoing, self.forwarding)
     
     def test_special(self):
-        self.assert_(self.voice.special)
+        self.assertTrue(self.voice.special)
         
     def test_inbox(self):
-        self.assert_(self.voice.inbox)
+        self.assertTrue(self.voice.inbox)
     
     def test_balance(self):
-        self.assert_(self.voice.settings['credits'])
+        self.assertTrue(self.voice.settings['credits'])
         
     def test_search(self):
-        self.assert_(len(self.voice.search('joe')))
+        self.assertTrue(len(self.voice.search('joe')))
     
     def test_disable_enable(self):
         self.voice.phones[0].disable()
@@ -41,16 +41,16 @@ class VoiceTest(TestCase):
         fn = '%s.mp3' % msg.id
         if path.isfile(fn): remove(fn)
         self.voice.download(msg)
-        self.assert_(path.isfile(fn))
+        self.assertTrue(path.isfile(fn))
     
     def test_zlogout(self):
         self.voice.logout()
-        self.assert_(self.voice.special is None)
+        self.assertTrue(self.voice.special is None)
         
     def test_config(self):
-        from conf import config
-        self.assert_(config.forwardingNumber)
-        self.assert_(str(config.phoneType) in '1237')
+        from .conf import config
+        self.assertTrue(config.forwardingNumber)
+        self.assertTrue(str(config.phoneType) in '1237')
         self.assertEqual(config.get('wtf'), None)
         
 if __name__ == '__main__': main()

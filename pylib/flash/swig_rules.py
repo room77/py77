@@ -1,5 +1,5 @@
-
 """Manages different functions related to swig rules parsing."""
+from __future__ import print_function
 
 __copyright__ = '2013 Room 77, Inc.'
 __author__ = 'Kyle Konrad <kyle@room77.com>'
@@ -9,7 +9,7 @@ import os
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from make_rules import MakeRules
+from pylib.flash.make_rules import MakeRules
 
 
 class SwigRules(MakeRules):
@@ -97,8 +97,8 @@ class SwigRules(MakeRules):
 
     # Remove the src.
     rule_data.pop('src', set())
-    for key in swig_data.keys():
-      if rule_data.has_key(key):
+    for key in list(swig_data):
+      if key in rule_data:
         rule_data[key] |= swig_data[key]
       else:
         rule_data[key] = swig_data[key]
@@ -120,7 +120,7 @@ class SwigRules(MakeRules):
                                        '_%s.so' % cls.__GetGenModuleName(interface_file))
         #target_lib = target_lib.replace('.so', '_swig.so') # TODO(KK) fix this hack
         assert gen_out_dir.startswith(src_root) # otherwise we will loop forever
-        print >>f, """
+        print("""
 %(wrapper_file)s: %(interface_file)s
 \t@mkdir -p %(gen_out_dir)s
 \t@ln -s -f %(target_lib)s %(target_lib_link)s
@@ -129,4 +129,4 @@ class SwigRules(MakeRules):
   touch $$p/__init__.py; \
   p=`dirname $$p`; \
 done
-""" % locals()
+""" % locals(), file=f)

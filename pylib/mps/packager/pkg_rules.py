@@ -42,7 +42,7 @@ class PkgRules(PkgRulesInterface):
     # ensure a data or file is specified
     if not 'data' in rule or \
        not rule['data'] or \
-       not isinstance(rule['data'], basestring):
+       not isinstance(rule['data'], str):
       err = 'invalid data field for rule %s' % name
       TermColor.Error(err)
       raise Error(err)
@@ -63,7 +63,7 @@ class PkgRules(PkgRulesInterface):
     # copy the control script and the control utility script
     ctrl_path = os.path.join(workingdir, Flags.ARGS.pkg_ctrl_name)
     shutil.copy2(Flags.ARGS.pkg_ctrl_path, ctrl_path)
-    os.chmod(ctrl_path, 0754)
+    os.chmod(ctrl_path, 0o754)
     # the shared control utility scripts
     CopyShared.copy(workingdir)
     # create the yaml definition for the control script

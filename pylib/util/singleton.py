@@ -13,6 +13,18 @@ __author__ = 'Pramod Gupta'
 
 import threading
 
+# with_metaclass method from Six compatibility library.
+# https://github.com/benjaminp/six/blob/1.11.0/six.py#L819
+def with_metaclass(meta, *bases):
+  class metaclass(type):
+    def __new__(cls, name, this_bases, d):
+      return meta(name, bases, d)
+
+    @classmethod
+    def __prepare__(cls, name, this_bases):
+      return meta.__prepare__(name, bases)
+
+  return type.__new__(metaclass, 'temporary_class', (), {})
 
 class SingletonException(Exception):
     pass
@@ -20,16 +32,15 @@ class SingletonException(Exception):
 
 class _SingletonMeta(type):
   def __new__(cls, name, bases, dct):
-    if dct.has_key('__new__'):
-      raise SingletonException, 'Can not override __new__ in a Singleton'
+    if '__new__' in dct:
+      raise SingletonException('Can not override __new__ in a Singleton')
     return super(_SingletonMeta, cls).__new__(cls, name, bases, dct)
 
   def __call__(cls, *args, **dictArgs):
     raise SingletonException('Singletons may only be instantiated through Instance()')
 
 
-class Singleton(object):
-  __metaclass__ = _SingletonMeta
+class Singleton(with_metaclass(_SingletonMeta, object)):
   _lock = threading.RLock()
 
   @classmethod
@@ -59,7 +70,7 @@ class Singleton(object):
       # Create the new instance and init it.
         instance = cls.__new__(cls)
         instance.__init__(*args, **kw)
-      except TypeError, e:
+      except TypeError as e:
         if e.message.find('__init__() takes') != -1:
           raise SingletonException('If the singleton requires __init__ args, '
                                    'supply them on first call to Instance().')

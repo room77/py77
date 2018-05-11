@@ -84,7 +84,7 @@ class PkgSysRules(PkgRulesInterface):
         (control_path, name), 'RED'))
     ctrl_dest_path = os.path.join(workingdir, Flags.ARGS.pkg_sys_ctrl_name)
     shutil.copy2(control_path, ctrl_dest_path)
-    os.chmod(ctrl_dest_path, 0754)
+    os.chmod(ctrl_dest_path, 0o754)
     # copy the shared files
     CopyShared.copy(workingdir)
     # create the yaml

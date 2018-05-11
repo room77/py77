@@ -13,9 +13,9 @@ from pylib.base.flags import Flags
 from pylib.file.file_utils import FileUtils
 from pylib.base.term_color import TermColor
 
-from pipeline_cmd_base import PipelineCmdBase
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_cmd_base import PipelineCmdBase
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 
 class Cleaner(PipelineCmdBase):
@@ -58,7 +58,7 @@ class Cleaner(PipelineCmdBase):
     """
     success_tasks = []
     paths_to_clean = set()
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       for task in set_tasks:
         paths = PipelineConfig.Instance().GetAllSubDirsForPath(
             PipelineUtils.GetTaskOutputRelativeDir(task))

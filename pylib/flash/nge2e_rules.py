@@ -14,9 +14,8 @@ from pylib.base.exec_utils import ExecUtils
 from pylib.file.file_utils import FileUtils
 from pylib.file.parse_include_list import ParseIncludeList
 
-from make_rules import MakeRules
-from sets import Set
-from utils import Utils
+from pylib.flash.make_rules import MakeRules
+from pylib.flash.utils import Utils
 
 Flags.PARSER.add_argument('--nge2e_timeout', type=int, default=30,
                           help='Timeout for phantom NG test (seconds).')

@@ -5,11 +5,25 @@ __copyright__ = 'Copyright 2012 Room77, Inc.'
 
 import argparse
 
+# HACK(stephen): Force add_subparsers to be backwards compatible since this
+# broke in Python 3.
+def build_parser():
+    parser = argparse.ArgumentParser(conflict_handler='resolve',
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    # Workaround based on: https://stackoverflow.com/a/22994500
+    _add_subparsers = parser.add_subparsers
+    def add_subparsers(*args, **kwargs):
+        subparser = _add_subparsers(dest='', *args, **kwargs)
+        subparser.required = True
+        return subparser
+    parser.add_subparsers = add_subparsers
+    return parser
+
 class Flags:
   """Class to manage command line flags."""
   ARGS = argparse.Namespace()
-  PARSER = argparse.ArgumentParser(conflict_handler='resolve',
-      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  PARSER = build_parser()
   TESTING = False
 
   @classmethod

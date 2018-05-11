@@ -15,7 +15,7 @@ def dict_key_filter(function, dictionary):
               included
     dictionary: python dict to filter
   """
-  return {k: v for k, v in dictionary.iteritems() if function(k)}
+  return {k: v for k, v in dictionary.items() if function(k)}
 
 def dict_val_filter(function, dictionary):
   """
@@ -26,7 +26,7 @@ def dict_val_filter(function, dictionary):
               included
     dictionary: python dict to filter
   """
-  return {k: v for k, v in dictionary.iteritems() if function(v)}
+  return {k: v for k, v in dictionary.items() if function(v)}
 
 def dict_filter(function, dictionary):
   """
@@ -37,7 +37,7 @@ def dict_filter(function, dictionary):
               included
     dictionary: python dict to filter
   """
-  return {k: v for k, v in dictionary.iteritems() if function(k, v)}
+  return {k: v for k, v in dictionary.items() if function(k, v)}
 
 def dict_reverse(dictionary):
   """
@@ -49,7 +49,7 @@ def dict_reverse(dictionary):
   Returns:
     reversed (dict): reversed dictionary
   """
-  return {v: k for k, v in dictionary.iteritems()}
+  return {v: k for k, v in dictionary.items()}
 
 class LRUDict(MutableMapping):
   """

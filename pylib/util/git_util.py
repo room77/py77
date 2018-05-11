@@ -41,12 +41,12 @@ class GitUtil(object):
       Error - critical error such as conflict stopped with
         hotfix from being applied
     """
-    print "moving to branch %s" % TermColor.ColorStr(branch, 'GREEN')
+    print("moving to branch %s" % TermColor.ColorStr(branch, 'GREEN'))
     # get onto the appropriate branch
     cls.checkout_branch(branch)
     # try to cherry-pick
-    print TermColor.ColorStr("Applying hotfix to branch: %s" % branch,
-                             'GREEN')
+    print(TermColor.ColorStr("Applying hotfix to branch: %s" % branch,
+                             'GREEN'))
     ret = ExecUtils.RunCmd('git cherry-pick %s' % commit_hash)[0]
     if not ret == 0:
       r = ExecUtils.RunCmd('git diff --name-only')
@@ -68,8 +68,8 @@ class GitUtil(object):
         'Please manually resolve your merge conflicts,' + \
         'then commit, and finally run hotfix selecting the ' + \
         'branches that have not yet received the commit', 'RED'))
-    print TermColor.ColorStr('Applied hotfix to %s' % branch, 'GREEN')
-    print TermColor.ColorStr('On branch %s' % branch, 'GREEN')
+    print(TermColor.ColorStr('Applied hotfix to %s' % branch, 'GREEN'))
+    print(TermColor.ColorStr('On branch %s' % branch, 'GREEN'))
 
   @classmethod
   def checkout_branch(cls, branch):

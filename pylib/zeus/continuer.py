@@ -14,9 +14,9 @@ from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from runner import Runner
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.runner import Runner
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 
 class Continuer(Runner):
@@ -37,7 +37,7 @@ class Continuer(Runner):
     """
     already_successful = []
     tasks_to_run = OrderedDict()
-    for priority, set_tasks in tasks.items():
+    for priority, set_tasks in list(tasks.items()):
       new_task_set = set()
       for task in set_tasks:
         out_dir = PipelineUtils.GetOutDirForTask(task)

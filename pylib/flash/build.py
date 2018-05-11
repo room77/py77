@@ -12,17 +12,17 @@ from pylib.base.flags import Flags
 from pylib.file.file_utils import FileUtils
 from pylib.base.term_color import TermColor
 
-from cc_rules import CCRules
-from cmd_handler import CmdHandler
-from gen_makefile import GenMakefile
-from pkg_rules import PkgRules
-from ng_rules import NGRules
-from nge2e_rules import NGe2eRules
-from js_rules import JSRules
-from py_rules import PyRules
-from swig_rules import SwigRules
-from rules import Rules
-from utils import Utils
+from pylib.flash.cc_rules import CCRules
+from pylib.flash.cmd_handler import CmdHandler
+from pylib.flash.gen_makefile import GenMakefile
+from pylib.flash.pkg_rules import PkgRules
+from pylib.flash.ng_rules import NGRules
+from pylib.flash.nge2e_rules import NGe2eRules
+from pylib.flash.js_rules import JSRules
+from pylib.flash.py_rules import PyRules
+from pylib.flash.swig_rules import SwigRules
+from pylib.flash.rules import Rules
+from pylib.flash.utils import Utils
 
 
 class Builder(CmdHandler):
@@ -101,7 +101,7 @@ class Builder(CmdHandler):
 
     # Build the rules for each rule type.
     successful_rules = []; failed_rules = []
-    for (k, v) in rules.items():
+    for (k, v) in list(rules.items()):
       (s, f) = ([], [])
       try:
         (s, f) = rules_map[k].MakeRules(v, makefile)

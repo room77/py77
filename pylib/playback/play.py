@@ -17,7 +17,7 @@ def advance_generator_once(f):
   'decorator to advance a generator once immediately after it is created'
   def decorated(*args, **kwargs):
     gen = f(*args, **kwargs)
-    assert gen.next() is None
+    assert next(gen) is None
     return gen
   return decorated
 

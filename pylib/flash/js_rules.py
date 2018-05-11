@@ -6,7 +6,7 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 
 from pylib.base.flags import Flags
 
-from url_rules_base import UrlRulesBase
+from pylib.flash.url_rules_base import UrlRulesBase
 
 Flags.PARSER.add_argument('--qunit_timeout', type=int, default=10,
                           help='Timeout for phantom JS test (seconds).')

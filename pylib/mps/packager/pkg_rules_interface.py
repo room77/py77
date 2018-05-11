@@ -5,8 +5,6 @@
 __author__ = 'edelman@room77.com (Nicholas Edelman)'
 __copyright__ = 'Copyright 2013 Room77, Inc.'
 
-from exceptions import NotImplementedError
-
 class PkgRulesInterface(object):
   """Base class for making packages"""
   @classmethod

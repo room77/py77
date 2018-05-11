@@ -11,8 +11,8 @@ from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 class PipelineCmdBase(object):
   """Base class for various pipeline commands."""
@@ -160,7 +160,7 @@ class PipelineCmdBase(object):
     # Dict to hold the primary priority for a given priority.
     res = OrderedDict()
     current_priority = ''
-    for key in sorted(tasks.keys()):
+    for key in sorted(tasks):
       if (not current_priority or len(current_priority) >= len(key) or
           key.find(current_priority) != 0 or int(key[len(current_priority):]) != 0):
         # Either

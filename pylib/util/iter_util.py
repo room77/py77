@@ -5,7 +5,11 @@ string utils
 __author__ = 'Kyle Konrad <kyle@room77.com>'
 __copyright__ = '2013, Room 77, Inc.'
 
-from itertools import izip_longest
+# Python 2/3 compatibility
+try:
+  from itertools import zip_longest # Python 3
+except ImportError:
+  from itertools import izip_longest as zip_longest # Python 2
 
 def chunk(iterable, n, fillvalue=None):
   """
@@ -18,4 +22,4 @@ def chunk(iterable, n, fillvalue=None):
   """
   # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
   args = [iter(iterable)] * n
-  return izip_longest(fillvalue=fillvalue, *args)
+  return zip_longest(fillvalue=fillvalue, *args)

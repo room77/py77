@@ -11,7 +11,7 @@ import sys
 import shlex
 from threading import Timer
 
-from term_color import TermColor
+from pylib.base.term_color import TermColor
 
 
 class KeyboardInterruptError(Exception):
@@ -78,7 +78,7 @@ class ExecUtils:
       pool.terminate()
       sys.stdout.flush()
       return res
-    except (KeyboardInterrupt, Exception), e:
+    except (KeyboardInterrupt, Exception) as e:
       TermColor.Error('%s: %s' % (type(e), e))
       # pool.close()
       pool.terminate()
@@ -89,7 +89,7 @@ class ExecUtils:
     return []
 
   @staticmethod
-  def RunCmd(cmd, timeout_sec=sys.maxint, piped_output=True, extra_env=None):
+  def RunCmd(cmd, timeout_sec=sys.maxsize, piped_output=True, extra_env=None):
     """Executes a command.
     Args:
       cmd: string: A string specifying the command to execute.
@@ -168,7 +168,7 @@ class ExecUtils:
 
     try:
       os.kill(root_pid, signal.SIGKILL)
-    except OSError, e:
+    except OSError as e:
       TermColor.Warning('Could not kill %d. Error %s' % (root_pid, e))
 
     # Kill all subchildren recursively.

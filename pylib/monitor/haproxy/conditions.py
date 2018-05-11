@@ -28,7 +28,7 @@ def more_than_proportion_down(prop):
   """
   def func(stats):
     total_count = stats.down_count + stats.up_count
-    if total_count and stats.down_count / total_count > prop:
+    if total_count and stats.down_count // total_count > prop:
       return '%d of %d %s instances are down' % (
         stats.down_count, stats.down_count + stats.up_count, stats.name)
   return func
@@ -40,9 +40,9 @@ def any_down_longer_than(duration):
   """
   def func(stats):
     now = datetime.utcnow()
-    for server, last_up in stats.last_up_times.items():
+    for server, last_up in list(stats.last_up_times.items()):
       downtime = now - last_up
       if downtime > duration:
         return '%s on %s has been down for %d minutes' % (
-          server, stats.name, downtime.total_seconds() / 60)
+          server, stats.name, downtime.total_seconds() // 60)
   return func

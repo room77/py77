@@ -12,11 +12,11 @@ import time
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 
-from build import Builder
-from clean import Cleaner
-from dep_graph import DepGraph
-from run import Runner
-from test import Tester
+from pylib.flash.build import Builder
+from pylib.flash.clean import Cleaner
+from pylib.flash.dep_graph import DepGraph
+from pylib.flash.run import Runner
+from pylib.flash.test import Tester
 
 
 class Flash:

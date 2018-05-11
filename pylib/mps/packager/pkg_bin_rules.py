@@ -5,7 +5,6 @@
 __author__ = 'edelman@room77.com (Nicholas Edelman)'
 __copyright__ = 'Copyright 2013 Room77, Inc.'
 
-from exceptions import NotImplementedError
 import os
 import shutil
 import subprocess
@@ -65,7 +64,7 @@ class PkgBinRules(PkgRulesInterface):
     files[os.path.join(FileUtils.GetSrcRoot(),
                        rule['ctrl'])] = 'control.yaml'
     # copy the files
-    for src, dest in files.iteritems():
+    for src, dest in files.items():
       shutil.copy2(src, os.path.join(workingdir, dest))
     # copy the shared files
     CopyShared.copy(workingdir)

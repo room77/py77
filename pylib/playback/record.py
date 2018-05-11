@@ -6,12 +6,12 @@ run as script to record on one of each type of server
 __author__ = "Kyle Konrad"
 __copyright__ = "2013, Room 77, Inc."
 
-from pylib.hosts.host_manager import HostManager
+# from pylib.hosts.host_manager import HostManager
 
 from datetime import datetime, timedelta
 from paramiko import RSAKey
 import requests
-from sshtail import SSHTailer
+# from sshtail import SSHTailer
 
 class Recorder(object):
   def __init__(self, role):

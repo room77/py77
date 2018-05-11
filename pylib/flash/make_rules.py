@@ -15,7 +15,7 @@ from pylib.base.term_color import TermColor
 from pylib.base.exec_utils import ExecUtils
 from pylib.file.file_utils import FileUtils
 
-from utils import Utils
+from pylib.flash.utils import Utils
 
 
 class MakeRules(object):
@@ -67,7 +67,7 @@ class MakeRules(object):
       TermColor.Warning('No rules to build.')
       return ([], rules)
 
-    args = itertools.izip(itertools.repeat(cls), itertools.repeat('_WorkHorse'),
+    args = zip(itertools.repeat(cls), itertools.repeat('_WorkHorse'),
                           rules, itertools.repeat(makefile))
     rule_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
     successful_rules = []; failed_rules = []
@@ -103,7 +103,7 @@ class MakeRules(object):
     try:
       shutil.copy(makefile, deps_file)
       cls._PrepareDepsFile(rule, deps_file)
-    except (OSError, IOError), e:
+    except (OSError, IOError) as e:
       TermColor.Error('Could not create makefile for rule %s' %
                       Utils.RuleDisplayName(rule))
       return (-1, rule)

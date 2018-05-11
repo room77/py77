@@ -57,7 +57,7 @@ class QueueClusterConfigUpdates(object):
       release (dict) - dict from package name to package version name
     """
     pkgs_str = ''
-    for pkg_name, pkg_ver in release_pkgs.iteritems():
+    for pkg_name, pkg_ver in release_pkgs.items():
       pkgs_str += '%s %s ' % (pkg_name, pkg_ver)
     cmd = '%s --verbose --required_user=%s %s releases %s %s' % (
       cls.BIN_NAME, Flags.ARGS.queue_config_user,
@@ -77,7 +77,7 @@ class QueueClusterConfigUpdates(object):
       Flags.ARGS.queue_config_user, Flags.ARGS.queue_config_host,
       cls.MPS_LOCK_FILE, os.getpid(), cls.MPS_LOCK_FILE,
       Flags.ARGS.queue_config_repo, cmd)
-    print "running locked update with cmd: %s" % remote_cmd
+    print("running locked update with cmd: %s" % remote_cmd)
     if ExecUtils.RunCmd(remote_cmd)[0]:
       raise Error('mps system failed to update for command: %s' % remote_cmd)
 

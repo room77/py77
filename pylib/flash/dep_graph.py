@@ -20,9 +20,9 @@ from pylib.base.term_color import TermColor
 from pylib.base.exec_utils import ExecUtils
 from pylib.file.file_utils import FileUtils
 
-from cmd_handler import CmdHandler
-from rules import Rules
-from utils import Utils
+from pylib.flash.cmd_handler import CmdHandler
+from pylib.flash.rules import Rules
+from pylib.flash.utils import Utils
 
 # gv is not necessary for the basic operation of DepGraph, so do not force it
 # to be included.
@@ -59,7 +59,7 @@ class DepGraph(CmdHandler):
     (successful_expand, failed_expand) = Rules.GetExpandedRules(
         rules, Flags.ARGS.allowed_rule_types)
 
-    args = itertools.izip(itertools.repeat(cls), itertools.repeat('_RunSingeRule'),
+    args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeRule'),
                           successful_expand)
     rule_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
     successful_deps = []; failed_deps = []

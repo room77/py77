@@ -17,13 +17,18 @@ __copyright__ = 'Copyright 2013 Room77, Inc.'
 
 import json
 import socket
-import urllib
+
+# Python 2/3 compatibility
+try:
+  from urllib.parse import quote # Python 3
+except ImportError:
+  from urllib import quote # Python 2
 
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 from pylib.base.exec_utils import ExecUtils
 
-from make_rules import MakeRules
+from pylib.flash.make_rules import MakeRules
 
 class UrlRulesBase(MakeRules):
 
@@ -89,7 +94,7 @@ class UrlRulesBase(MakeRules):
             unit = "?%s" % url_param
           # equivalent to encodeuricomponent see:
           # http://stackoverflow.com/questions/946170/equivalent-javascript-functions-for-pythons-urllib-quote-and-urllib-unquote
-          test_json = urllib.quote(json.dumps(test_dict), safe='~()*!.\'')
+          test_json = quote(json.dumps(test_dict), safe='~()*!.\'')
           # build the urls
           if len(components) == 1:
             urls.append('https://%s/%s%s=%s' % (hostname, components[0], unit,

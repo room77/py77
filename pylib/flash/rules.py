@@ -5,7 +5,7 @@
 __author__ = 'pramodg@room77.com (Pramod Gupta)'
 __copyright__ = 'Copyright 2012 Room77, Inc.'
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -14,9 +14,9 @@ import types
 
 from pylib.base.term_color import TermColor
 
-from proto_rules import ProtoRules
-from swig_rules import SwigRules
-from utils import Utils
+from pylib.flash.proto_rules import ProtoRules
+from pylib.flash.swig_rules import SwigRules
+from pylib.flash.utils import Utils
 
 
 class RulesParseError(Exception):
@@ -94,7 +94,7 @@ class Rules:
       return res
 
     if not types:
-      types = rules_in_dir.keys()
+      types = list(rules_in_dir)
 
     for type in types:
       res += rules_in_dir.get(type, [])
@@ -129,7 +129,7 @@ class Rules:
     args['_target'] = rule
     args['_type'] = rule_type
 
-    if cls.rules.has_key(rule):
+    if rule in cls.rules:
       err_str = 'Rule [%s] already defined.' % name
       TermColor.Error(err_str)
       raise RulesParseError(err_str)
@@ -181,7 +181,7 @@ class Rules:
     for field in ['src', 'hdr', 'dep', 'main', 'prebuild', 'flag', 'link']:
       field_data = args.get(field, [])
       if not field_data: continue
-      if not isinstance(field_data, types.ListType):
+      if not isinstance(field_data, list):
         err_str = ('Invalid target: [%s]. field [%s] must be of <type \'list\'>, not %s' %
                    (name, field, type(field_data)))
         TermColor.Error(err_str)
@@ -252,7 +252,7 @@ class Rules:
       oldbasedir = cls.basedir
       cls.basedir = dirname
       TermColor.VInfo(5, 'Reading %s' % rules_file)
-      execfile(rules_file)
+      exec(compile(open(rules_file).read(), rules_file, 'exec'))
       cls.basedir = oldbasedir
 
   @classmethod
@@ -404,28 +404,28 @@ class Rules:
       merge_ignore |= {'src', 'hdr'}
       proto_data = ProtoRules.GetProtoRuleFormattedData(new_dep_data,
           referrer_data.get('_type', 'invalid'))
-      for key in proto_data.keys():
+      for key in list(proto_data):
         with cls.LOAD_LOCK:
-          if referrer_data.has_key(key):
+          if key in referrer_data:
             referrer_data[key] |= proto_data[key]
           else:
             referrer_data[key] = proto_data[key]
     elif (new_dep_data.get('_type' , 'invalid') == 'swig_lib'):
       merge_ignore |= {'src'}
       swig_data = SwigRules.GetSwigRuleFormattedData(new_dep_data)
-      for key in swig_data.keys():
+      for key in list(swig_data):
         with cls.LOAD_LOCK:
-          if referrer_data.has_key(key):
+          if key in referrer_data:
             referrer_data[key] |= swig_data[key]
           else:
             referrer_data[key] = swig_data[key]
 
     # Merge all other keys from the new dep.
     with cls.LOAD_LOCK:
-      for key in new_dep_data.keys():
+      for key in list(new_dep_data):
         if key in merge_ignore or key.find('_') == 0:
           continue
-        if referrer_data.has_key(key):
+        if key in referrer_data:
           referrer_data[key] |= new_dep_data[key]
         else:
           referrer_data[key] = new_dep_data[key]

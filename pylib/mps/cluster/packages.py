@@ -104,7 +104,7 @@ class Packages(object):
 
   def get_packages(self):
     self._get_versions()
-    return self.packages_versions.keys()
+    return list(self.packages_versions)
 
   def get_versions(self, pkg_name=''):
     if pkg_name == '':
@@ -158,7 +158,7 @@ print yaml.dump(pkgs)
       # too verbose quiet down!
       # print '%s: list versions of %s' % (self.host, pkg_name)
     self.verbose = old_verbose
-    for k, v in data.iteritems():
+    for k, v in data.items():
       self.packages_versions[k] = v
 
   def f_import(self, src_dir, pkg_name, version_prefix=None):
@@ -210,8 +210,8 @@ print yaml.dump(pkgs)
     cmd.append(destination)
     if self.dry_run or self.verbose:
       # print cmd
-      print '%s: copying package %s => %s to host' % (
-        self.host, pkg_name, version)
+      print('%s: copying package %s => %s to host' % (
+        self.host, pkg_name, version))
     if not self.dry_run:
       subprocess.check_call(cmd)
 
@@ -228,7 +228,7 @@ print yaml.dump(pkgs)
     versions = self.get_versions(pkg_name)
     if version in versions:
       return version
-    v = filter(lambda x: re.search('^\d+_' + version + '$', x), versions)
+    v = [x for x in versions if re.search('^\d+_' + version + '$', x)]
     if 0 == len(v):
      raise Exception("version %s doesn't exist" % version)
     elif len(v) > 1:
@@ -238,7 +238,7 @@ print yaml.dump(pkgs)
   def remove(self, pkg_name, version):
     version = self.search_version(pkg_name, version)
     if self.verbose:
-      print "%s.%s(%s, %s, %s)" %(self.__class__.__name__, sys._getframe().f_code.co_name, self.host, pkg_name, version)
+      print("%s.%s(%s, %s, %s)" %(self.__class__.__name__, sys._getframe().f_code.co_name, self.host, pkg_name, version))
     if version == self.get_current(pkg_name):
       raise Exception("Can't remove current")
     saved = self.packages_versions[pkg_name]
@@ -255,7 +255,7 @@ print yaml.dump(pkgs)
     if not current:
       return
     if self.verbose:
-      print '%s: stopping %s' % (self.host, pkg_name)
+      print('%s: stopping %s' % (self.host, pkg_name))
     self._call_ssh(Template('''
 if [ -x '$control' ]; then
   '$control' stop
@@ -268,7 +268,7 @@ fi
     if not current:
       raise Exception("current is not set for %s" % pkg_name)
     if self.verbose:
-      print '%s: starting %s' % (self.host, pkg_name)
+      print('%s: starting %s' % (self.host, pkg_name))
     self._call_ssh(Template('''
 if [ -x '$control' ]; then
   '$control' start
@@ -283,8 +283,8 @@ fi
       return
     del self.packages_versions[pkg_name]
     if self.verbose:
-      print '%s: %s => %s setting current and calling setlive' % (
-        self.host, pkg_name, version)
+      print('%s: %s => %s setting current and calling setlive' % (
+        self.host, pkg_name, version))
     self._call_ssh(Template('''
 if [ 'X' != 'X$currentVer' ]; then
   rm -f '$currentLink'
@@ -307,7 +307,7 @@ fi''').substitute({
       return
     del self.packages_versions[pkg_name]
     if self.verbose:
-      print '%s: %s => %s activating' % (self.host, pkg_name, version)
+      print('%s: %s => %s activating' % (self.host, pkg_name, version))
     self._call_ssh(Template('''
 if [ 'X' != 'X$currentVer' ]; then
   if [ -x '$oldCtl' ]; then

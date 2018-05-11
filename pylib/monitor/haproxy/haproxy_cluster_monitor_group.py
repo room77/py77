@@ -17,14 +17,19 @@ from datetime import timedelta
 from itertools import chain
 import logging
 import os.path
-import urllib
 
-from .haproxy_monitor import HAProxyMonitor
-from .conditions import (more_than_n_down, more_than_proportion_down,
+# Python 2/3 compatibility
+try:
+  from urllib.request import urlopen # Python 3
+except ImportError:
+  from urllib import urlopen # Python 2
+
+from pylib.monitor.haproxy.haproxy_monitor import HAProxyMonitor
+from pylib.monitor.haproxy.conditions import (more_than_n_down, more_than_proportion_down,
                          any_down_longer_than)
 
-from prod.cluster.cluster import Cluster
 from pylib.file.file_utils import FileUtils
+from pylib.mps.cluster.cluster import Cluster
 from pylib.net.mailer import ThrottledMailer
 
 # logging config
@@ -70,7 +75,7 @@ class HAProxyClusterMonitorGroup(ThrottledMailer):
     """
     clusters = cls.clusters()
     monitors = {} # cluster name -> [monitor for each host]
-    for cluster_name, conditions in cluster_conditions.items():
+    for cluster_name, conditions in list(cluster_conditions.items()):
       hosts = clusters.get_hosts(chain.from_iterable(
         [item['hosts'] for item in clusters.clusters[cluster_name]['data']
          if not item.get('external', False)]))
@@ -99,7 +104,7 @@ class HAProxyClusterMonitorGroup(ThrottledMailer):
     """
     # reread conf file every time so we can see changes
     success = True
-    for cluster_name, monitors in self.cluster_monitors.items():
+    for cluster_name, monitors in list(self.cluster_monitors.items()):
       if self.is_active(cluster_name):
         unreachable = 0
         for monitor in monitors:
@@ -108,7 +113,7 @@ class HAProxyClusterMonitorGroup(ThrottledMailer):
           except IOError:
             try:
               # check the network connection
-              urllib.urlopen('http://google.com')
+              urlopen('http://google.com')
             except IOError:
               logger.log('no network connection')
             else:

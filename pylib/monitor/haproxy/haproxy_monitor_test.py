@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from flexmock import flexmock
 import unittest
 
-from .conditions import more_than_n_down, any_down_longer_than
-from .haproxy_monitor import HAProxyMonitor, ProxyStats
+from pylib.monitor.haproxy.conditions import more_than_n_down, any_down_longer_than
+from pylib.monitor.haproxy.haproxy_monitor import HAProxyMonitor, ProxyStats
 
 def seconds_ago(seconds):
   return datetime.utcnow() - timedelta(seconds=seconds)

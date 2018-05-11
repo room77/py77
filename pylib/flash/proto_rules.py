@@ -4,7 +4,7 @@
 __author__ = 'pramodg@room77.com (Pramod Gupta)'
 __copyright__ = 'Copyright 2012 Room77, Inc.'
 
-import commands
+import subprocess
 import os
 
 from pylib.file.file_utils import FileUtils
@@ -61,8 +61,8 @@ class ProtoRules:
 
       out['src'] = set([ cls.__GetOutFileName(x, '.pb.cc') for x in srcs ])
       out['hdr'] = set([ cls.__GetOutFileName(x, '.pb.h') for x in srcs ])
-      out['flag'] = set(commands.getoutput(pkg_config_cmd + ' --cflags').split())
-      out['link'] = set(commands.getoutput(pkg_config_cmd + ' --libs').split())
+      out['flag'] = set(subprocess.getoutput(pkg_config_cmd + ' --cflags').split())
+      out['link'] = set(subprocess.getoutput(pkg_config_cmd + ' --libs').split())
     else:
       TermColor.Error('Unsupported referrer type %s' % out_type)
 
@@ -80,8 +80,8 @@ class ProtoRules:
 
     # Remove the src.
     rule_data.pop('src', set())
-    for key in proto_data.keys():
-      if rule_data.has_key(key):
+    for key in list(proto_data):
+      if key in rule_data:
         rule_data[key] |= proto_data[key]
       else:
         rule_data[key] = proto_data[key]

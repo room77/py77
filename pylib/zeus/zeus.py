@@ -9,19 +9,18 @@ import argparse
 import sys
 import time
 
+import pylib.zeus.cleaner as cleaner
+import pylib.zeus.continuer as continuer
+import pylib.zeus.exporter as exporter
+import pylib.zeus.importer as importer
+import pylib.zeus.pipeline_config as pc
+import pylib.zeus.publisher as publisher
+import pylib.zeus.runner as runner
+
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 
-import cleaner
-import continuer
-import exporter
-import importer
-import pipeline_config as pc
-import publisher
-import runner
-
-
-class Zeus:
+class Zeus(object):
   """Main class to handle all pipeline commands."""
   # List of supported commands.
   SUPPORTED_CMDS = ['clean', 'continue', 'export', 'import', 'publish', 'run', 'help']

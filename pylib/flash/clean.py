@@ -13,8 +13,8 @@ from pylib.base.exec_utils import ExecUtils
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 
-from gen_makefile import GenMakefile
-from utils import Utils
+from pylib.flash.gen_makefile import GenMakefile
+from pylib.flash.utils import Utils
 
 class Cleaner:
   """Class to handle clean."""

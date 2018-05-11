@@ -7,7 +7,7 @@ __copyright__ = '2013, Room77, Inc'
 
 import unittest
 
-from descriptor import lazy
+from pylib.util.descriptor import lazy
 
 class LazyPropertyTest(unittest.TestCase):
   def test_simple(self):

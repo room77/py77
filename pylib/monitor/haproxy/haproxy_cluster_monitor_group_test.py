@@ -10,7 +10,7 @@ __author__ = 'Kyle Konrad <kyle@room77.com>'
 from flexmock import flexmock
 import unittest
 
-from .haproxy_cluster_monitor_group import HAProxyClusterMonitorGroup
+from pylib.monitor.haproxy.haproxy_cluster_monitor_group import HAProxyClusterMonitorGroup
 
 def mock_monitor(url, available):
   """

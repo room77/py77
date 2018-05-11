@@ -5,7 +5,12 @@ Utility functions for managing credentials
 __author__ = 'Kyle Konrad <kyle@room77.com>'
 __copyright__ = '2014, Room 77, Inc.'
 
-from ConfigParser import ConfigParser
+# Python 2/3 compatibility
+try:
+  from configparser import ConfigParser # Python 3
+except ImportError:
+  from ConfigParser import ConfigParser # Python 2
+
 import os
 
 from pylib.file.file_utils import FileUtils

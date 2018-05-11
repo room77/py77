@@ -15,9 +15,9 @@ from pylib.base.exec_utils import ExecUtils
 from pylib.base.term_color import TermColor
 from pylib.file.file_utils import FileUtils
 
-from pipeline_cmd_base import PipelineCmdBase
-from pipeline_config import PipelineConfig
-from pipeline_utils import PipelineUtils
+from pylib.zeus.pipeline_cmd_base import PipelineCmdBase
+from pylib.zeus.pipeline_config import PipelineConfig
+from pylib.zeus.pipeline_utils import PipelineUtils
 
 class Importer(PipelineCmdBase):
   """Class to handle import of the output directory to a public location."""
@@ -50,7 +50,7 @@ class Importer(PipelineCmdBase):
     all_tasks = []
     dirs_to_import = {}
     dir_to_task_map = {}
-    for set_tasks in tasks.itervalues():
+    for set_tasks in tasks.values():
       for task in set_tasks:
         all_tasks += [task]
         out_dir = PipelineUtils.GetOutDirForTask(task)
@@ -66,13 +66,13 @@ class Importer(PipelineCmdBase):
       return ([], all_tasks)
 
     # Create all the target dirs to import to.
-    for dir in dirs_to_import.itervalues():
+    for dir in dirs_to_import.values():
       FileUtils.MakeDirs(dir)
 
     # Run all the copy tasks.
     successful_dirs = []; failed_dirs = []
-    args = itertools.izip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
-                          dirs_to_import.keys(), dirs_to_import.values())
+    args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
+                          list(dirs_to_import), list(dirs_to_import.values()))
     dir_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
     if not dir_res:
       TermColor.Error('Could not process: %s' % all_tasks)

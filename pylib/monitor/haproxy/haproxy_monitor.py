@@ -36,7 +36,12 @@ import csv
 from datetime import datetime, timedelta
 import logging
 import re
-import urllib
+
+# Python 2/3 compatibility
+try:
+  from urllib.request import urlopen # Python 3
+except ImportError:
+  from urllib import urlopen # Python 2
 
 from pylib.net.mailer import ThrottledMailer
 
@@ -104,7 +109,7 @@ class HAProxyMonitor(ThrottledMailer):
     """
     protocol, path = self.url.split('://')
     tar_url = '%s://%s:%s@%s' % (protocol or 'http', self.username, self.password, path)
-    return urllib.urlopen(tar_url).read()
+    return urlopen(tar_url).read()
 
   def parse_status(self, status_csv):
     """
@@ -126,7 +131,7 @@ class HAProxyMonitor(ThrottledMailer):
     reader = csv.reader([row for row in status_csv.split('\n')][:-1], delimiter=',')
 
     # check that field indices are correct
-    headers = reader.next()
+    headers = next(reader)
     assert headers[PXNAME] == '# pxname'
     assert headers[SVNAME] == 'svname'
     assert headers[STATUS] == 'status'
@@ -152,9 +157,9 @@ class HAProxyMonitor(ThrottledMailer):
 
   def alert(self):
     all_passed = True
-    for name_regex, conditions in self.conditions.items():
+    for name_regex, conditions in list(self.conditions.items()):
       matches = 0
-      for name, stats in self.stats.items():
+      for name, stats in list(self.stats.items()):
         if re.search(name_regex, name):
           matches += 1
           for condition in conditions:

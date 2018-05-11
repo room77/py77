@@ -20,7 +20,7 @@ class SingletonTest(unittest.TestCase):
 
         def __init__(self):
           self.counter += 1;
-          print "Init called:"
+          print("Init called:")
 
     self.assertNotEqual(id(A.Instance()), id(A))
     self.assertEqual(A.Instance().member1, A.member1)
@@ -39,9 +39,9 @@ class SingletonTest(unittest.TestCase):
 
     i1 = A.Instance('arg1 value', 'arg2 value')
     i2 = A.Instance('!arg1 value', '!arg2 value')
-    self.assertEquals(id(i1), id(i2))
-    self.assertEquals(i2.arg1, 'arg1 value')
-    self.assertEquals(i2.arg2, 'arg2 value')
+    self.assertEqual(id(i1), id(i2))
+    self.assertEqual(i2.arg1, 'arg1 value')
+    self.assertEqual(i2.arg2, 'arg2 value')
 
   def test_kw_args(self):
       class A(singleton.Singleton):
@@ -51,8 +51,8 @@ class SingletonTest(unittest.TestCase):
 
       i1 = A.Instance(arg1=10)
       i2 = A.Instance(arg1=20)
-      self.assertEquals(id(i1), id(i2))
-      self.assertEquals(i2.arg1, 10)
+      self.assertEqual(id(i1), id(i2))
+      self.assertEqual(i2.arg1, 10)
 
   def test_create_without_args(self):
       class A(singleton.Singleton):
@@ -69,7 +69,7 @@ class SingletonTest(unittest.TestCase):
         super(A, self).__init__()
         self.arg1 = arg1
         self.arg2 = arg2
-        raise TypeError, 'some type error'
+        raise TypeError('some type error')
 
     self.assertRaises(TypeError, A.Instance, 1, 2)
 

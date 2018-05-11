@@ -13,10 +13,10 @@ def to_unicode(s, encoding='utf-8'):
   """
   convert a string or unicode to unicode
   """
-  if isinstance(s, unicode):
+  if isinstance(s, str):
     return s
   else:
-    return unicode(s, encoding=encoding)
+    return str(s, encoding=encoding)
 
 def camelize(strings):
   """
@@ -55,7 +55,7 @@ def break_and_indent(string, max_line_length=80, indent='',
     >>> break_and_indent('1111 2 3 55 66', 5, '  ')
     '1111\n  2 3\n  55\n  66'
   """
-  if isinstance(break_at, basestring):
+  if isinstance(break_at, str):
     break_at=re.compile('(%s)' % break_at)
   tokens = [token + separator for token, separator in
             chunk(break_at.split(string), 2, '')]

@@ -10,8 +10,8 @@ import sys
 from pylib.base.flags import Flags
 from pylib.base.term_color import TermColor
 
-from run import Runner
-from utils import Utils
+from pylib.flash.run import Runner
+from pylib.flash.utils import Utils
 
 class Tester(Runner):
   """Class to handle test."""
