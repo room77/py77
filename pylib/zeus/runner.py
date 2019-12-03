@@ -48,6 +48,27 @@ class Runner(PipelineCmdBase):
     3: 'ABORT',
   }
 
+  TASK_OPTIONS = {
+    # Default option. Task will run regardless of if earlier tasks in the directory
+    # were successful or not. Task will not run if any task across the pipeline was
+    # marked as `abort_fail`.
+    'NORMAL': 0,
+    # If this step fails, prevent any subsequent steps across the entire pipeline from
+    # running. The pipeline will be aborted. All currently running tasks will finish,
+    # but no further tasks will be run. To enable this option, add `.abort_fail` to the
+    # task name.
+    'ABORT_FAIL': 1,
+    # If this step fails, do not mark the out directory as failed. Mark it as successful
+    # if all other tasks at this level have succeeded. This will allow publishing of a
+    # task directory even if the only steps that failed were marked as `allow_fail`. To
+    # enable this option, add `.allow_fail` to the task name.
+    'ALLOW_FAIL': 2,
+    # If any earlier tasks located in the same directory as this task failed, prevent
+    # this task from running. This task will also be marked as failed. To enable this
+    # option, add `.require_dir_success` to the task name.
+    'REQUIRE_DIR_SUCCESS': 3,
+  }
+
   @classmethod
   def Init(cls, parser):
     super(Runner, cls).Init(parser)
@@ -87,21 +108,50 @@ class Runner(PipelineCmdBase):
     successful_run = []; failed_run = []
     aborted_task = None
 
+    # NOTE(stephen): Storing task dir status and task out dir status separately since
+    # pipelines do not always have an out dir defined.
     dirs_status = {}
+    out_dirs_status = {}
     for set_tasks in tasks.values():
       if aborted_task:
         failed_run += set_tasks
         continue
 
+      tasks_to_run = []
+      for task in set_tasks:
+        task_options = cls.__GetTaskOptions(task)
+        # Check if this task requires all previous tasks in the same directory to be
+        # successful.
+        if task_options[Runner.TASK_OPTIONS['REQUIRE_DIR_SUCCESS']]:
+          task_dir = PipelineUtils.TaskDirName(task)
+          cur_dir_status = dirs_status.get(task_dir)
+          # If any previous tasks have been run in this directory, check to ensure all
+          # of them were successful.
+          if cur_dir_status and cur_dir_status != Runner.EXITCODE['SUCCESS']:
+            failed_run += [task]
+            task_display_name = PipelineUtils.TaskDisplayName(task)
+            TermColor.Info('Skipped   %s' % task_display_name)
+            TermColor.Failure(
+              'Skipped Task: %s due to earlier failures in task dir' % task_display_name
+            )
+            continue
+
+        tasks_to_run.append(task)
+
+      # It is possible for all steps at this priority level to be skipped due to the
+      # task options selected.
+      if set_tasks and not tasks_to_run:
+        continue
+
       # Run all the tasks at the same priority in parallel.
       args = zip(itertools.repeat(cls), itertools.repeat('_RunSingeTask'),
-                            set_tasks)
+                            tasks_to_run)
       task_res = ExecUtils.ExecuteParallel(args, Flags.ARGS.pool_size)
       # task_res = []
-      # for task in set_tasks: task_res += [cls._RunSingeTask(task)]
+      # for task in tasks_to_run: task_res += [cls._RunSingeTask(task)]
       if not task_res:
-        TermColor.Error('Could not process: %s' % set_tasks)
-        failed_run += set_tasks
+        TermColor.Error('Could not process: %s' % tasks_to_run)
+        failed_run += tasks_to_run
         continue
       for (res, task) in task_res:
         if res == Runner.EXITCODE['SUCCESS']:
@@ -115,13 +165,22 @@ class Runner(PipelineCmdBase):
           aborted_task = task
         else:
           TermColor.Fatal('Invalid return %d code for %s' % (res, task))
+
+        # Update the current status of all tasks in the same directory.
+        task_dir = PipelineUtils.TaskDirName(task)
+        dirs_status[task_dir] = max(
+          dirs_status.get(task_dir, Runner.EXITCODE['_LOWEST']), res,
+        )
+
         # Update the out dir status.
         out_dir = PipelineUtils.GetOutDirForTask(task)
         if out_dir:
-          dirs_status[out_dir] = max(dirs_status.get(out_dir, Runner.EXITCODE['_LOWEST']), res)
+          out_dirs_status[out_dir] = max(
+            out_dirs_status.get(out_dir, Runner.EXITCODE['_LOWEST']), res,
+          )
 
     # Write the status files to the dirs.
-    cls._WriteDirsStatus(dirs_status)
+    cls._WriteOutDirsStatus(out_dirs_status)
 
     # Send the final status mail.
     time_taken = time.time() - start
@@ -208,9 +267,11 @@ class Runner(PipelineCmdBase):
     vars.update(PipelineConfig.Instance().GetAllENVVars())
 
     # Check if the task is critical or not.
-    rel_task = PipelineUtils.TaskRelativeName(task)
-    if rel_task.find('.abort_fail') != -1: vars['PIPELINE_TASK_ABORT_FAIL'] = '1'
-    if rel_task.find('.allow_fail') != -1: vars['PIPELINE_TASK_ALLOW_FAIL'] = '1'
+    task_options = cls.__GetTaskOptions(task)
+    if task_options[Runner.TASK_OPTIONS['ABORT_FAIL']]:
+      vars['PIPELINE_TASK_ABORT_FAIL'] = '1'
+    if task_options[Runner.TASK_OPTIONS['ALLOW_FAIL']]:
+      vars['PIPELINE_TASK_ALLOW_FAIL'] = '1'
     return vars
 
   @classmethod
@@ -244,6 +305,25 @@ class Runner(PipelineCmdBase):
     elif annotation == 'ms': timeout *= 0.001
     elif annotation == 'us': timeout *= 0.000001
     return timeout
+
+  @classmethod
+  def __GetTaskOptions(cls, task):
+    rel_task = PipelineUtils.TaskRelativeName(task)
+    options = {
+      v: False
+      for v in Runner.TASK_OPTIONS.values()
+    }
+
+    if '.abort_fail' in rel_task:
+      options[Runner.TASK_OPTIONS['ABORT_FAIL']] = True
+    if '.allow_fail' in rel_task:
+      options[Runner.TASK_OPTIONS['ALLOW_FAIL']] = True
+    if '.require_dir_success' in rel_task:
+      options[Runner.TASK_OPTIONS['REQUIRE_DIR_SUCCESS']] = True
+
+    if not options:
+      options[Runner.TASK_OPTIONS['NORMAL']] = True
+    return options
 
   @classmethod
   def _SendMailForTask(cls, task, status_code, time_taken, log_file, msg):
@@ -285,13 +365,13 @@ class Runner(PipelineCmdBase):
         body)
 
   @classmethod
-  def _WriteDirsStatus(cls, dirs_status):
+  def _WriteOutDirsStatus(cls, out_dirs_status):
     """Writes the status for each of the dirs in the dict.
 
     Args:
-      dirs_status: dict {string, EXITCODE}: Dict of dir -> exit status.
+      out_dirs_status: dict {string, EXITCODE}: Dict of dir -> exit status.
     """
-    for k, v in dirs_status.items():
+    for k, v in out_dirs_status.items():
       FileUtils.RemoveFiles([os.path.join(k, x) for x in Runner.EXITCODE_FILE.values()])
       status_file = Runner.EXITCODE_FILE.get(v, '')
       if not status_file: continue
