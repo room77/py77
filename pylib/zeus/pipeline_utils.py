@@ -219,7 +219,7 @@ class PipelineUtils:
     """
     while path:
       prev_dir = FileUtils.GetPreviousDatedDir(path)
-      if glob.glob(os.path.join(prev_dir, pattern)):
+      if prev_dir and glob.glob(os.path.join(prev_dir, pattern)):
         return prev_dir
       path = prev_dir
     return None
