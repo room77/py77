@@ -72,7 +72,10 @@ class ExecUtils:
     if not pool_size:
       pool_size = max(multiprocessing.cpu_count(), 1)
 
-    pool = multiprocessing.Pool(processes=pool_size)
+    # NOTE(stephen): Require use of `fork` for multiprocessing instead of `spawn` since
+    # there are issues with the reuse of some libraries (like Flags) when `spawn` is
+    # used.
+    pool = multiprocessing.get_context('fork').Pool(processes=pool_size)
     try:
       res = pool.map(callback, args)
       pool.terminate()
