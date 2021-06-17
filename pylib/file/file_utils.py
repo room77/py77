@@ -43,7 +43,7 @@ class FileUtils:
     Args:
       dir: string: The directory to build.
     """
-    if not os.path.exists(dir): os.makedirs(dir)
+    if not os.path.exists(dir) and not os.path.islink(dir): os.makedirs(dir)
 
   @classmethod
   def CopyDirTree(cls, src, dst):
